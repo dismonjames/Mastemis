@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Mastemis.Sandbox.Contracts;
+using Mastemis.Sandbox.Resources;
 
 namespace Mastemis.Sandbox.Processes;
 
@@ -24,8 +25,9 @@ internal static class OciProcessRunner
         { return Failure("Configured OCI runtime was not found.", backend, stopwatch.Elapsed); }
         using var timeout = new CancellationTokenSource(request.Limits.WallTime);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-        var stdout = CopyBoundedAsync(process.StandardOutput.BaseStream, request.StandardOutputPath, request.Limits.OutputBytes, linked.Token);
-        var stderr = CopyBoundedAsync(process.StandardError.BaseStream, request.StandardErrorPath, request.Limits.OutputBytes, linked.Token);
+        var outputBudget = new SandboxOutputBudget(request.Limits.OutputBytes);
+        var stdout = CopyBoundedAsync(process.StandardOutput.BaseStream, request.StandardOutputPath, outputBudget, linked.Token);
+        var stderr = CopyBoundedAsync(process.StandardError.BaseStream, request.StandardErrorPath, outputBudget, linked.Token);
         var input = request.StandardInputPath is null ? Task.CompletedTask : CopyInputAsync(request.StandardInputPath, process.StandardInput.BaseStream, linked.Token);
         try
         {
@@ -46,14 +48,14 @@ internal static class OciProcessRunner
         { TryKill(process); return new(SandboxExitKind.TimedOut, null, null, TimeSpan.Zero, stopwatch.Elapsed, null, 0, 0, SandboxResourceViolation.WallTime, null, backend); }
         catch (OperationCanceledException) { TryKill(process); return new(SandboxExitKind.Cancelled, null, null, TimeSpan.Zero, stopwatch.Elapsed, null, 0, 0, null, null, backend); }
     }
-    private static async Task<long> CopyBoundedAsync(Stream input, string path, long limit, CancellationToken cancellationToken)
+    private static async Task<long> CopyBoundedAsync(Stream input, string path, SandboxOutputBudget budget, CancellationToken cancellationToken)
     {
         await using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read, 81920, FileOptions.Asynchronous);
         var buffer = new byte[81920]; long total = 0;
         while (true)
         {
             var count = await input.ReadAsync(buffer, cancellationToken); if (count == 0) return total;
-            total += count; if (total > limit) throw new SandboxOutputLimitException(); await output.WriteAsync(buffer.AsMemory(0, count), cancellationToken);
+            total += count; if (!budget.TryConsume(count)) throw new SandboxOutputLimitException(); await output.WriteAsync(buffer.AsMemory(0, count), cancellationToken);
         }
     }
     private static async Task CopyInputAsync(string path, Stream output, CancellationToken cancellationToken)
