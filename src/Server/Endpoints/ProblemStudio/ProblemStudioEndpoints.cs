@@ -4,6 +4,7 @@ using Mastemis.Server.Endpoints.ProblemStudio.Generation;
 using Mastemis.Server.Endpoints.ProblemStudio.Mas;
 using Mastemis.Server.Endpoints.ProblemStudio.ReferenceSolutions;
 using Mastemis.Server.Endpoints.ProblemStudio.Statements;
+using Mastemis.Server.Endpoints.ProblemStudio.Tests;
 
 namespace Mastemis.Server.Endpoints.ProblemStudio;
 
@@ -19,5 +20,6 @@ public static class ProblemStudioEndpoints
         group.MapReferenceSolutionEndpoints();
         group.MapProblemMasEndpoints();
         group.MapProblemGenerationEndpoints();
+        group.MapProblemTestEndpoints();
     }
 }
