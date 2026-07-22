@@ -1,0 +1,6 @@
+{
+  "image": "localhost/mastemis-judge:0.1.0",
+  "dotnetMajor": 10,
+  "cppStandard": "c++23",
+  "containerUser": "1000:1000"
+}
