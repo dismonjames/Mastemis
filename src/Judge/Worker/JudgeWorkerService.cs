@@ -74,13 +74,18 @@ public sealed class JudgeWorkerService(IJudgeServerClient server, IJudgementOrch
             await server.CompleteAsync(lease.JobId, new(lease.LeaseId, lease.SubmissionId, result), execution.Token);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        catch (OperationCanceledException)
+        {
+            await ReportFailureAsync(lease, "worker.execution_cancelled");
+        }
         catch (Exception exception) when (exception is JudgeContractException or JudgeServerException or HttpRequestException)
         {
             var code = exception is JudgeContractException contract ? contract.Code.ToString() : "worker.infrastructure";
-            health.Update(state => state with { LastFailureCode = code });
-            try { await server.FailAsync(lease.JobId, new(lease.LeaseId, code), CancellationToken.None); }
-            catch (Exception reportException) when (reportException is HttpRequestException or JudgeServerException)
-            { logger.LogWarning("Unable to report judge job failure; lease recovery will handle the abandoned job."); }
+            await ReportFailureAsync(lease, code);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            await ReportFailureAsync(lease, "worker.execution_failure");
         }
         finally
         {
@@ -90,6 +95,14 @@ public sealed class JudgeWorkerService(IJudgeServerClient server, IJudgementOrch
             catch (Exception exception) when (exception is JudgeServerException or HttpRequestException)
             { logger.LogWarning("Lease renewal stopped after a server communication failure."); }
         }
+    }
+
+    private async Task ReportFailureAsync(WorkerLeaseContract lease, string code)
+    {
+        health.Update(state => state with { LastFailureCode = code });
+        try { await server.FailAsync(lease.JobId, new(lease.LeaseId, code), CancellationToken.None); }
+        catch (Exception reportException) when (reportException is HttpRequestException or JudgeServerException)
+        { logger.LogWarning("Unable to report judge job failure; lease recovery will handle the abandoned job."); }
     }
 
     private async Task RenewLeaseAsync(WorkerLeaseContract lease, CancellationToken cancellationToken)
