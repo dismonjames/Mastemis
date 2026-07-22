@@ -1,3 +1,4 @@
+using Mastemis.Infrastructure.Persistence.Problems;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,13 @@ public sealed class MastemisDbContext(DbContextOptions<MastemisDbContext> option
     public DbSet<EvidencePackageRow> EvidencePackages => Set<EvidencePackageRow>();
     public DbSet<EvidenceItemRow> EvidenceItems => Set<EvidenceItemRow>();
     public DbSet<EvidenceReviewGrantRow> EvidenceReviewGrants => Set<EvidenceReviewGrantRow>();
+    public DbSet<ProblemDraftRow> ProblemDrafts => Set<ProblemDraftRow>();
+    public DbSet<ProblemStatementRow> ProblemStatements => Set<ProblemStatementRow>();
+    public DbSet<ProblemGenerationOperationRow> ProblemGenerationOperations => Set<ProblemGenerationOperationRow>();
+    public DbSet<GeneratedTestSetRow> GeneratedTestSets => Set<GeneratedTestSetRow>();
+    public DbSet<GeneratedTestRow> GeneratedTests => Set<GeneratedTestRow>();
+    public DbSet<ProblemPackageImportRow> ProblemPackageImports => Set<ProblemPackageImportRow>();
+    public DbSet<ProblemPackageExportRow> ProblemPackageExports => Set<ProblemPackageExportRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -44,7 +44,8 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
         foreach (var table in new[] { "exams", "exam_rooms", "candidates", "candidate_registrations", "exam_sessions",
             "source_revisions", "submissions", "judgements", "sfe_events", "sfe_evaluations", "confirmed_warnings",
             "judge_workers", "worker_credentials", "judge_jobs", "idempotency_records", "outbox_messages", "audit_records", "termination_metadata",
-            "evidence_packages", "evidence_items", "evidence_review_grants" })
+            "evidence_packages", "evidence_items", "evidence_review_grants", "problem_drafts", "problem_statements",
+            "problem_generation_operations", "generated_test_sets", "generated_tests", "problem_package_imports", "problem_package_exports" })
             Assert.Contains(table, tables);
     }
 
