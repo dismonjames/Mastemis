@@ -22,8 +22,8 @@ public sealed class MasSemanticValidator
         ["shuffle"] = new("shuffle", 1, 1, MasType.Array),
         ["sorted"] = new("sorted", 1, 1, MasType.Array),
         ["reversed"] = new("reversed", 1, 1, MasType.Array),
-        ["tree"] = new("tree", 1, 3, MasType.Tree),
-        ["simpleGraph"] = new("simpleGraph", 2, 4, MasType.Graph)
+        ["tree"] = new("tree", 1, 5, MasType.Tree),
+        ["simpleGraph"] = new("simpleGraph", 2, 5, MasType.Graph)
     };
     private static readonly HashSet<string> Directives = new(StringComparer.Ordinal)
         { "boundaries", "random", "sorted", "reversed", "duplicates", "adversarial" };

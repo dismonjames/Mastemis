@@ -7,6 +7,8 @@ using Mastemis.Mas.Language.Syntax.Nodes;
 using Mastemis.Mas.Language.Syntax.Tokens;
 using Mastemis.Mas.Runtime.Formatting;
 using Mastemis.Mas.Runtime.Generation;
+using Mastemis.Mas.Runtime.Generation.Graphs;
+using Mastemis.Mas.Runtime.Generation.Trees;
 using Mastemis.Mas.Runtime.Limits;
 using Mastemis.Mas.Runtime.Random;
 using Mastemis.Mas.Runtime.Values;
@@ -71,6 +73,7 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
     {
         long Int(int index) => ((MasInteger)Evaluate(call.Arguments[index], vars, random, strategy, check)).Value;
         MasValue Value(int index) => Evaluate(call.Arguments[index], vars, random, strategy, check);
+        bool Bool(int index, bool fallback) => call.Arguments.Count > index ? ((MasBoolean)Value(index)).Value : fallback;
         return call.Name.Text switch
         {
             "int" => Integer(Int(0), Int(1), random, strategy),
@@ -84,8 +87,9 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
             "shuffle" => Transform(Value(0), random, "shuffle"),
             "sorted" => Transform(Value(0), random, "sorted"),
             "reversed" => Transform(Value(0), random, "reversed"),
-            "tree" => Tree(CheckedNodes(Int(0)), random),
-            "simpleGraph" => Graph(CheckedNodes(Int(0)), CheckedEdges(Int(1)), random),
+            "tree" => TreeGenerator.Generate(new(CheckedNodes(Int(0)), Bool(1, true), call.Arguments.Count > 2 ? checked((int)Int(2)) : null,
+                Bool(3, false), call.Arguments.Count > 4 ? ((MasString)Value(4)).Value : "random"), random),
+            "simpleGraph" => GraphGenerator.Generate(new(CheckedNodes(Int(0)), CheckedEdges(Int(1)), Bool(2, false), Bool(3, false), Bool(4, true)), random),
             _ => throw Invalid()
         };
     }
@@ -111,14 +115,6 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
     }
     private static MasValue ApplyStrategy(MasValue value, string strategy, SplitMix64Random random) => strategy switch
     { "sorted" => Transform(value, random, "sorted"), "reversed" => Transform(value, random, "reversed"), _ => value };
-    private static MasEdges Tree(int nodes, SplitMix64Random random)
-    { var edges = new List<(int, int)>(); for (var node = 2; node <= nodes; node++) edges.Add(((int)random.NextInt64(1, node - 1), node)); return new(nodes, edges); }
-    private static MasEdges Graph(int nodes, int edges, SplitMix64Random random)
-    {
-        var maximum = (long)nodes * (nodes - 1) / 2; if (edges < 0 || edges > maximum) throw Invalid(); var result = new HashSet<(int, int)>();
-        while (result.Count < edges) { var a = (int)random.NextInt64(1, nodes); var b = (int)random.NextInt64(1, nodes); if (a == b) continue; if (a > b) (a, b) = (b, a); result.Add((a, b)); }
-        return new(nodes, result.Order().ToArray());
-    }
     private int CheckedLength(long value) => value is < 0 or > int.MaxValue || value > limits.MaximumCollectionLength ? throw new MasRuntimeException("mas.runtime.collection_limit", "Collection length exceeds policy.") : (int)value;
     private int CheckedNodes(long value) => value is < 1 or > int.MaxValue || value > limits.MaximumGraphNodes ? throw new MasRuntimeException("mas.runtime.graph_limit", "Graph size exceeds policy.") : (int)value;
     private int CheckedEdges(long value) => value is < 0 or > int.MaxValue || value > limits.MaximumGraphEdges ? throw new MasRuntimeException("mas.runtime.graph_limit", "Graph edge count exceeds policy.") : (int)value;
