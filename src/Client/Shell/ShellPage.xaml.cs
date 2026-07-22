@@ -30,8 +30,16 @@ public sealed partial class ShellPage : Page
     private void BuildNavigation()
     {
         Navigation.MenuItems.Clear();
+        string? group = null;
         foreach (var item in viewModel.NavigationItems)
+        {
+            if (!string.Equals(group, item.Group, StringComparison.Ordinal))
+            {
+                group = item.Group;
+                Navigation.MenuItems.Add(new NavigationViewItemHeader { Content = group });
+            }
             Navigation.MenuItems.Add(new NavigationViewItem { Content = item.Label, Tag = item.Route, Icon = new FontIcon { Glyph = item.Glyph } });
+        }
     }
 
     private void Navigation_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)

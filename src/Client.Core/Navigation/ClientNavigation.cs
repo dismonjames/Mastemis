@@ -8,7 +8,7 @@ public enum ClientRoute
     Invigilation, Evidence, Problems, ProblemStudio, Workers, Health, Settings, Unauthorized, NotFound
 }
 
-public sealed record NavigationDescriptor(ClientRoute Route, string Label, string Glyph, IReadOnlyList<string> Roles);
+public sealed record NavigationDescriptor(ClientRoute Route, string Label, string Glyph, string Group, IReadOnlyList<string> Roles);
 
 public interface IClientNavigator
 {
@@ -28,19 +28,19 @@ public sealed class NavigationCatalog
 {
     private static readonly NavigationDescriptor[] Items =
     [
-        new(ClientRoute.Dashboard, "Dashboard", "\uE80F", []),
-        new(ClientRoute.Examinations, "Examinations", "\uE787", ["Administrator", "ExamManager", "ChiefInvigilator"]),
-        new(ClientRoute.Rooms, "Rooms", "\uE716", ["Administrator", "ExamManager", "ChiefInvigilator", "RoomInvigilator"]),
-        new(ClientRoute.Candidates, "Candidates", "\uE716", ["Administrator", "ExamManager", "ChiefInvigilator", "RoomInvigilator"]),
-        new(ClientRoute.CandidateExam, "Current examination", "\uE70F", ["Candidate"]),
-        new(ClientRoute.Submissions, "Submissions", "\uE8A5", ["Candidate"]),
-        new(ClientRoute.Invigilation, "Invigilation", "\uE7BA", ["ChiefInvigilator", "RoomInvigilator"]),
-        new(ClientRoute.Evidence, "Evidence", "\uE8D7", ["EvidenceReviewer"]),
-        new(ClientRoute.Problems, "Problems", "\uE82D", ["Administrator", "ExamManager", "ProblemOwner", "ProblemEditor", "ProblemReviewer", "ProblemViewer"]),
-        new(ClientRoute.ProblemStudio, "Problem Studio", "\uE943", ["Administrator", "ExamManager", "ProblemOwner", "ProblemEditor", "ProblemReviewer", "ProblemViewer"]),
-        new(ClientRoute.Workers, "Workers", "\uE950", ["Administrator", "ExamManager"]),
-        new(ClientRoute.Health, "System health", "\uE9D9", ["Administrator"]),
-        new(ClientRoute.Settings, "Settings", "\uE713", [])
+        new(ClientRoute.Dashboard, "Dashboard", "\uE80F", "Overview", []),
+        new(ClientRoute.Examinations, "Examinations", "\uE787", "Operations", ["Administrator", "ExamManager", "ChiefInvigilator"]),
+        new(ClientRoute.Rooms, "Rooms", "\uE8B7", "Operations", ["Administrator", "ExamManager", "ChiefInvigilator", "RoomInvigilator"]),
+        new(ClientRoute.Candidates, "Candidates", "\uE716", "Operations", ["Administrator", "ExamManager", "ChiefInvigilator", "RoomInvigilator"]),
+        new(ClientRoute.CandidateExam, "Current examination", "\uE70F", "Examination", ["Candidate"]),
+        new(ClientRoute.Submissions, "Submissions", "\uE8A5", "Examination", ["Candidate"]),
+        new(ClientRoute.Invigilation, "Invigilation", "\uE7BA", "Live monitoring", ["ChiefInvigilator", "RoomInvigilator"]),
+        new(ClientRoute.Evidence, "Evidence", "\uE8D7", "Review", ["EvidenceReviewer"]),
+        new(ClientRoute.Problems, "Problems", "\uE82D", "Authoring", ["Administrator", "ExamManager", "ProblemOwner", "ProblemEditor", "ProblemReviewer", "ProblemViewer"]),
+        new(ClientRoute.ProblemStudio, "Problem Studio", "\uE943", "Authoring", ["Administrator", "ExamManager", "ProblemOwner", "ProblemEditor", "ProblemReviewer", "ProblemViewer"]),
+        new(ClientRoute.Workers, "Judge workers", "\uE950", "System", ["Administrator", "ExamManager"]),
+        new(ClientRoute.Health, "System health", "\uE9D9", "System", ["Administrator"]),
+        new(ClientRoute.Settings, "Settings", "\uE713", "Preferences", [])
     ];
 
     public IReadOnlyList<NavigationDescriptor> For(ClientSession session)
