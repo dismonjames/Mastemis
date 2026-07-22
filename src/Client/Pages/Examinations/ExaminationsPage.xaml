@@ -1,7 +1,36 @@
-<Page x:Class="Mastemis.Client.Pages.Examinations.ExaminationsPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
- <ScrollViewer><StackPanel Margin="28" Spacing="18" MaxWidth="1000"><TextBlock Text="Examinations" Style="{StaticResource MastemisPageTitleStyle}"/><TextBlock Text="Create an examination or inspect an authorized examination by identifier." Style="{StaticResource MastemisMutedTextStyle}"/>
-  <Border Style="{StaticResource MastemisCardStyle}"><StackPanel Spacing="12"><TextBlock Text="Create examination" Style="{StaticResource MastemisSectionTitleStyle}"/><TextBox Header="Title" Text="{Binding Title, Mode=TwoWay}"/><Button Content="Create" Command="{Binding CreateCommand}" Style="{StaticResource MastemisPrimaryButtonStyle}"/></StackPanel></Border>
-  <Border Style="{StaticResource MastemisCardStyle}"><StackPanel Spacing="12"><TextBlock Text="Examination details" Style="{StaticResource MastemisSectionTitleStyle}"/><TextBox Header="Examination ID" Text="{Binding ExamId, Mode=TwoWay}"/><StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Refresh" Command="{Binding RefreshCommand}"/><Button Content="Open" Command="{Binding OpenCommand}"/><Button Content="Close" Command="{Binding CloseCommand}"/></StackPanel><TextBlock Text="{Binding Examination.Title}" FontWeight="SemiBold"/><TextBlock Text="{Binding Examination.State}"/></StackPanel></Border>
-  <InfoBar IsOpen="{Binding HasError}" Severity="Error" Title="Request failed" Message="{Binding Error}" IsClosable="False"/>
- </StackPanel></ScrollViewer>
+<Page x:Class="Mastemis.Client.Pages.Examinations.ExaminationsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="using:Mastemis.Client.Controls">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel Margin="{StaticResource MastemisPageMargin}" Spacing="18" MaxWidth="1320" HorizontalAlignment="Stretch">
+        <controls:PageHeader Eyebrow="OPERATIONS" Title="Examinations" Subtitle="Create and transition authorized examinations. All state changes remain server-authoritative.">
+            <controls:PageHeader.Commands><Button Content="Refresh selected" Command="{Binding RefreshCommand}" Style="{StaticResource MastemisSecondaryButtonStyle}"/></controls:PageHeader.Commands>
+        </controls:PageHeader>
+        <ProgressBar IsIndeterminate="{Binding IsBusy}" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <InfoBar IsOpen="{Binding HasError}" Severity="Error" Title="Examination request failed" Message="{Binding Error}" IsClosable="False"/>
+
+        <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
+            <StackPanel Spacing="16">
+                <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
+                    <StackPanel Spacing="12"><TextBlock Text="Create examination" Style="{StaticResource MastemisSectionTitleStyle}"/><TextBlock Text="Create a durable draft, then schedule and open it when preparation is complete." Style="{StaticResource MastemisCaptionTextStyle}"/><TextBox Header="Title" Text="{Binding Title, Mode=TwoWay}" Style="{StaticResource MastemisFormTextBoxStyle}"/><Button Content="Create draft" Command="{Binding CreateCommand}" Style="{StaticResource MastemisPrimaryButtonStyle}" HorizontalAlignment="Left"/></StackPanel>
+                </Border>
+                <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
+                    <StackPanel Spacing="12"><TextBlock Text="Open by identifier" Style="{StaticResource MastemisSectionTitleStyle}"/><TextBlock Text="The current server has no authorized examination-list endpoint; direct lookup remains fully functional." Style="{StaticResource MastemisCaptionTextStyle}"/><TextBox Header="Examination ID" Text="{Binding ExamId, Mode=TwoWay}" Style="{StaticResource MastemisFormTextBoxStyle}"/><Button Content="Load examination" Command="{Binding RefreshCommand}" Style="{StaticResource MastemisSecondaryButtonStyle}" HorizontalAlignment="Left"/></StackPanel>
+                </Border>
+            </StackPanel>
+
+            <Border Grid.Column="1" Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
+                <StackPanel>
+                    <Grid Padding="18,14" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Selected examination" Style="{StaticResource MastemisSectionTitleStyle}"/><Border Grid.Column="1" Style="{StaticResource MastemisStatusPillStyle}"><TextBlock Text="{Binding Examination.State}"/></Border></Grid>
+                    <controls:EmptyState Visibility="{Binding HasExamination, Converter={StaticResource InverseBooleanToVisibilityConverter}}" Title="No examination selected" Message="Create a draft or enter an authorized examination identifier." Glyph="&#xE787;"/>
+                    <StackPanel Visibility="{Binding HasExamination, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="18" Spacing="18">
+                        <StackPanel Spacing="5"><TextBlock Text="{Binding Examination.Title}" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="{Binding Examination.Id}" Style="{StaticResource MastemisCodeTextStyle}"/></StackPanel>
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><CalendarDatePicker Header="Starts" Date="{Binding StartsAt, Mode=TwoWay}"/><CalendarDatePicker Grid.Column="1" Header="Ends" Date="{Binding EndsAt, Mode=TwoWay}"/></Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Schedule" Command="{Binding ScheduleCommand}"/><Button Content="Open" Command="{Binding OpenCommand}" Style="{StaticResource MastemisPrimaryButtonStyle}"/><Button Content="Close" Command="{Binding CloseCommand}"/><Button Content="Cancel" Command="{Binding CancelCommand}" Foreground="{ThemeResource MastemisDangerBrush}"/></StackPanel>
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><controls:MetricTile Label="Rooms" Value="—" Detail="Open room operations" Glyph="&#xE8B7;"/><controls:MetricTile Grid.Column="1" Label="Candidates" Value="—" Detail="Open candidate operations" Glyph="&#xE716;"/><controls:MetricTile Grid.Column="2" Label="Sessions" Value="—" Detail="No aggregate endpoint" Glyph="&#xE7BA;"/></Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </StackPanel></ScrollViewer>
 </Page>

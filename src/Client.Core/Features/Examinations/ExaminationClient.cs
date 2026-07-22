@@ -8,6 +8,7 @@ public interface IExaminationClient
 {
     Task<ExaminationSummary> CreateAsync(string title, CancellationToken cancellationToken);
     Task TransitionAsync(Guid examId, string action, CancellationToken cancellationToken);
+    Task ScheduleAsync(Guid examId, DateTimeOffset startsAtUtc, DateTimeOffset endsAtUtc, CancellationToken cancellationToken);
     Task<ExaminationSummary?> GetSummaryAsync(Guid examId, CancellationToken cancellationToken);
 }
 
@@ -18,6 +19,10 @@ public sealed class ExaminationClient(IApiTransport transport) : IExaminationCli
 
     public Task TransitionAsync(Guid examId, string action, CancellationToken cancellationToken)
         => transport.SendAsync(HttpMethod.Post, $"/api/exams/{examId:D}/{action}", new { }, Guid.NewGuid().ToString("N"), cancellationToken);
+
+    public Task ScheduleAsync(Guid examId, DateTimeOffset startsAtUtc, DateTimeOffset endsAtUtc, CancellationToken cancellationToken)
+        => transport.SendAsync(HttpMethod.Post, $"/api/exams/{examId:D}/schedule",
+            new { startsAtUtc, endsAtUtc, idempotencyKey = Guid.NewGuid().ToString("N") }, null, cancellationToken);
 
     public Task<ExaminationSummary?> GetSummaryAsync(Guid examId, CancellationToken cancellationToken)
         => transport.GetAsync<ExaminationSummary>($"/api/exams/{examId:D}/summary", cancellationToken);
