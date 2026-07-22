@@ -19,7 +19,7 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
     private PostgreSqlContainer? _container;
     private string? _connectionString;
     private readonly string _objects = Path.Combine(Path.GetTempPath(), $"mastemis-problem-store-{Guid.NewGuid():N}");
-    private static bool DockerAvailable => File.Exists("/var/run/docker.sock") || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOCKER_HOST"));
+    private static bool DockerAvailable => Fixtures.DockerEnvironment.IsAvailable();
 
     public async ValueTask InitializeAsync()
     {

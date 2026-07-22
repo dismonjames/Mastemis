@@ -10,6 +10,7 @@ server_log="$log_dir/server.log"
 cookie_jar="$state_dir/login-test.cookies"
 server_pid_file="$state_dir/server.pid"
 compose_file="$repo_root/deploy/compose/compose.yaml"
+compose_environment_file="$state_dir/compose.environment"
 
 server_http_port="${MASTEMIS_DEV_HTTP_PORT:-5080}"
 server_https_port="${MASTEMIS_DEV_HTTPS_PORT:-5443}"
@@ -54,7 +55,19 @@ require_command curl
 require_command openssl
 
 if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-  compose=(docker compose)
+  if docker info >/dev/null 2>&1; then
+    compose=(docker compose)
+  else
+    printf 'Docker is installed but %s cannot access its socket.\n' "$(id -un)"
+    printf 'Requesting sudo only for Docker; .NET and Uno will still run as %s.\n' "$(id -un)"
+    if ! sudo -v || ! sudo docker info >/dev/null 2>&1; then
+      printf '%s\n' \
+        'Docker access failed. Configure rootless Docker or add your user to the docker group.' \
+        "Suggested command: sudo usermod -aG docker $(id -un)" >&2
+      exit 3
+    fi
+    compose=(sudo docker compose)
+  fi
 elif command -v podman >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
   compose=(podman compose)
 else
@@ -64,8 +77,33 @@ else
   exit 3
 fi
 
+if [[ -e "$state_dir" && ! -O "$state_dir" ]]; then
+  printf 'Local state directory is not owned by %s: %s\n' "$(id -un)" "$state_dir" >&2
+  printf 'Repair it once with: sudo chown -R %q:%q %q\n' "$(id -un)" "$(id -gn)" "$state_dir" >&2
+  exit 8
+fi
 mkdir -p "$state_dir" "$log_dir"
+if [[ ! -O "$log_dir" || ! -w "$log_dir" ]]; then
+  printf 'Log directory is not writable by %s: %s\n' "$(id -un)" "$log_dir" >&2
+  printf 'Repair it once with: sudo chown -R %q:%q %q\n' "$(id -un)" "$(id -gn)" "$state_dir" >&2
+  exit 8
+fi
 chmod 700 "$state_dir" "$log_dir"
+
+quarantine_unowned_file() {
+  local path="$1"
+  [[ -e "$path" ]] || return 0
+  [[ -O "$path" ]] && return 0
+  local quarantine_dir="$state_dir/quarantine"
+  local destination="$quarantine_dir/$(basename "$path")-$(date -u +%Y%m%dT%H%M%SZ)"
+  mkdir -p "$quarantine_dir"
+  printf 'Local file is owned by another user; moving %s to %s\n' "$path" "$destination"
+  mv -- "$path" "$destination"
+}
+
+quarantine_unowned_file "$server_log"
+quarantine_unowned_file "$cookie_jar"
+quarantine_unowned_file "$server_pid_file"
 
 quarantine_unowned_build_tree() {
   local path="$1"
@@ -109,6 +147,10 @@ source "$env_file"
 : "${ADMINISTRATOR_PASSWORD:?Missing generated administrator password}"
 : "${CERTIFICATE_PASSWORD:?Missing generated certificate password}"
 
+umask 077
+printf 'MASTEMIS_POSTGRES_PASSWORD=%s\n' "$POSTGRES_PASSWORD" > "$compose_environment_file"
+compose+=(--env-file "$compose_environment_file")
+
 if $reset && [[ -d "$repo_root/deploy/compose/data" ]]; then
   backup_dir="$state_dir/database-backup-$(date -u +%Y%m%dT%H%M%SZ)"
   "${compose[@]}" -f "$compose_file" down >/dev/null 2>&1 || true
@@ -137,13 +179,15 @@ cleanup() {
     rm -f -- "$server_pid_file"
   fi
   printf '\nMastemis server stopped. PostgreSQL data was retained.\n'
-  printf 'Stop PostgreSQL with: %q %q -f %q down\n' "${compose[0]}" "${compose[1]:-}" "$compose_file"
+  printf 'Stop PostgreSQL with: '
+  printf '%q ' "${compose[@]}"
+  printf -- '-f %q down\n' "$compose_file"
   exit "$exit_code"
 }
 trap cleanup EXIT INT TERM
 
 printf '[1/6] Starting PostgreSQL...\n'
-MASTEMIS_POSTGRES_PASSWORD="$POSTGRES_PASSWORD" "${compose[@]}" -f "$compose_file" up -d postgres
+"${compose[@]}" -f "$compose_file" up -d postgres
 
 printf '[2/6] Restoring and building Mastemis...\n'
 dotnet restore "$repo_root/Mastemis.sln" --nologo

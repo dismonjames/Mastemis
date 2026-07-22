@@ -12,7 +12,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
     private string? _connectionString;
-    private static bool DockerAppearsAvailable => File.Exists("/var/run/docker.sock") || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOCKER_HOST"));
+    private static bool DockerAppearsAvailable => Fixtures.DockerEnvironment.IsAvailable();
 
     public async ValueTask InitializeAsync()
     {

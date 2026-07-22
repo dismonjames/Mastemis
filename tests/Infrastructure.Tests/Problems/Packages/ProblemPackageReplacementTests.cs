@@ -14,8 +14,7 @@ namespace Mastemis.Infrastructure.Tests.Problems.Packages;
 
 public sealed class ProblemPackageReplacementTests : IAsyncLifetime
 {
-    private static readonly bool DockerAvailable = File.Exists("/var/run/docker.sock") ||
-        !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOCKER_HOST"));
+    private static readonly bool DockerAvailable = Fixtures.DockerEnvironment.IsAvailable();
     private readonly Guid actorId = Guid.NewGuid();
     private readonly string objectRoot = Path.Combine(Path.GetTempPath(), $"mastemis-replace-{Guid.NewGuid():N}");
     private PostgreSqlContainer? container;

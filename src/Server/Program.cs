@@ -110,7 +110,8 @@ if (durableMode)
     builder.Services.AddScoped<IWorkerJudgeQueue, PostgresWorkerJudgeQueue>();
     builder.Services.AddSingleton(new WorkerJobPayloadOptions(storageRoot, judgeDataRoot));
     builder.Services.AddScoped<WorkerJobPayloadService>();
-    builder.Services.AddScoped<IWorkerCredentialService, WorkerCredentialService>();
+    builder.Services.AddScoped<WorkerCredentialService>();
+    builder.Services.AddScoped<IWorkerCredentialService>(sp => sp.GetRequiredService<WorkerCredentialService>());
     builder.Services.AddScoped<IHumanIdentityAdministration, HumanIdentityAdministration>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();
     builder.Services.AddScoped<IAdministrationActor, HttpAdministrationActor>();
@@ -134,7 +135,11 @@ if (durableMode)
     builder.Services.AddScoped<PostgresProblemPackageReplacer>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
-    builder.Services.AddScoped<ProblemObjectReconciler>();
+    builder.Services.AddScoped(sp => new ProblemObjectReconciler(
+        problemReconciliationOptions.RootPath,
+        sp.GetRequiredService<IProblemObjectStorage>(),
+        sp.GetRequiredService<IProblemObjectReferenceLookup>(),
+        sp.GetRequiredService<ILogger<ProblemObjectReconciler>>()));
     builder.Services.AddScoped<ProblemExportCleanupService>();
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddScoped<IProblemMasStore, PostgresProblemMasStore>();

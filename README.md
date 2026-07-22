@@ -19,7 +19,8 @@ directory with restrictive permissions. Use `./scripts/dev-full.sh --reset` to m
 database aside and start clean, or `--no-ui` to run only PostgreSQL and the server.
 Run the script as your normal user, never with `sudo`. Configure rootless Docker/Podman or grant
 your user access to Docker; using `sudo` would create root-owned .NET build outputs. The script
-detects and quarantines build outputs owned by another user before building.
+detects and quarantines build outputs owned by another user before building. If the Docker socket
+still requires elevation, the script may prompt once and applies `sudo` only to Docker commands.
 
 ```bash
 dotnet restore Mastemis.sln
