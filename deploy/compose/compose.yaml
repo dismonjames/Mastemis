@@ -8,7 +8,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data:/var/lib/postgresql/data
+      # PostgreSQL 18 stores clusters in major-version-specific directories.
+      # Mount the parent so upgrades and pg_upgrade --link remain possible.
+      - ./data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mastemis -d mastemis"]
       interval: 5s
