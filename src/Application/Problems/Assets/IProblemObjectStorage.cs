@@ -3,6 +3,7 @@ namespace Mastemis.Application.Problems.Assets;
 public enum ProblemObjectKind
 {
     Asset,
+    Statement,
     Package,
     TestInput,
     ExpectedOutput,
