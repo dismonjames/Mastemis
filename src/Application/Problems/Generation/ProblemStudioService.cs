@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Mastemis.Application.Problems.Authoring;
+using Mastemis.Application.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 using Mastemis.Mas.Language.Semantics;
 using Mastemis.Mas.Language.Syntax;
@@ -14,7 +15,8 @@ public sealed record MasValidationResult(bool Valid, IReadOnlyList<Mastemis.Mas.
 public sealed record MasPreviewResult(bool Valid, ulong Seed, string RuntimeVersion, IReadOnlyList<GeneratedTest> Tests,
     IReadOnlyList<Mastemis.Mas.Language.Diagnostics.MasDiagnostic> Diagnostics, bool Truncated);
 
-public sealed class ProblemStudioService(IProblemStudioStore store, IAuthorizationService authorization)
+public sealed class ProblemStudioService(IProblemStudioStore store, IAuthorizationService authorization,
+    IReferenceOutputJobScheduler referenceJobs)
 {
     public async Task<DraftProblem> CreateAsync(string title, string locale, CancellationToken cancellationToken)
     {
@@ -58,6 +60,7 @@ public sealed class ProblemStudioService(IProblemStudioStore store, IAuthorizati
                 throw new ApplicationFailure(ErrorCodes.InvalidInput, "MAS source contains errors.");
             operation = await store.TransitionGenerationAsync(operation.Id, GenerationOperationStatus.GeneratingInputs, 0, report.Tests.Count, cancellationToken);
             await store.StageInputsAsync(operation, report.Tests.Select(x => (x.Index, x.Group, Encoding.UTF8.GetBytes(x.Input), x.Sha256)).ToArray(), cancellationToken);
+            await referenceJobs.ScheduleAsync(operation.Id, cancellationToken);
             return (await store.GetGenerationAsync(operation.Id, cancellationToken))!;
         }
         catch (OperationCanceledException) { await store.CancelGenerationAsync(operation.Id, CancellationToken.None); throw; }

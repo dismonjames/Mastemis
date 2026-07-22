@@ -1,5 +1,6 @@
 using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Generation;
+using Mastemis.Application.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 
 namespace Mastemis.Application.Tests.Problems;
@@ -9,19 +10,20 @@ public sealed class ProblemStudioServiceTests
     [Fact]
     public async Task Preview_is_bounded_and_does_not_publish()
     {
-        var store = new FakeStore(); var service = new ProblemStudioService(store, new Allow()); var id = ProblemId.New();
+        var store = new FakeStore(); var service = new ProblemStudioService(store, new Allow(), new Jobs()); var id = ProblemId.New();
         var result = await service.PreviewAsync(id, "test 20 { input = int(1, 10) }", 4, 3, TestContext.Current.CancellationToken);
         Assert.True(result.Valid); Assert.Equal(3, result.Tests.Count); Assert.Empty(store.Published);
     }
     [Fact]
     public async Task Generation_publishes_complete_set_once()
     {
-        var store = new FakeStore(); var service = new ProblemStudioService(store, new Allow()); var draft = await store.CreateAsync("X", "en", TestContext.Current.CancellationToken);
+        var store = new FakeStore(); var service = new ProblemStudioService(store, new Allow(), new Jobs()); var draft = await store.CreateAsync("X", "en", TestContext.Current.CancellationToken);
         await store.SaveMasAsync(draft.Id, "test 2 { input = int(1, 10) }", "hash", TestContext.Current.CancellationToken);
         var operation = await service.GenerateAsync(draft.Id, 2, TestContext.Current.CancellationToken);
         Assert.Equal(GenerationOperationStatus.WaitingForReferenceOutputs, operation.Status); Assert.Equal(2, store.Published.Count);
     }
     private sealed class Allow : IAuthorizationService { public ValueTask EnsureAsync(string permission, Guid scopeId, CancellationToken cancellationToken) => ValueTask.CompletedTask; }
+    private sealed class Jobs : IReferenceOutputJobScheduler { public Task<Guid> ScheduleAsync(Guid operationId, CancellationToken cancellationToken) => Task.FromResult(Guid.NewGuid()); }
     private sealed class FakeStore : IProblemStudioStore
     {
         private DraftProblem? _problem; private ProblemGenerationOperation? _operation;

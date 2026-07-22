@@ -111,6 +111,8 @@ if (durableMode)
     builder.Services.AddScoped<RealtimeRouteResolver>();
     builder.Services.AddScoped<SourceObjectReconciler>();
     builder.Services.AddScoped<IProblemStudioStore, PostgresProblemStudioStore>();
+    builder.Services.AddScoped<IReferenceOutputJobScheduler, PostgresReferenceOutputJobScheduler>();
+    builder.Services.AddScoped<IProblemTestSetPublisher, PostgresProblemTestSetPublisher>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemStudioService>();

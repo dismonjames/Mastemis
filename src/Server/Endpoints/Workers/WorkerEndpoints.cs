@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Mastemis.Application;
+using Mastemis.Application.Problems.TestSets;
 using Mastemis.Contracts.Judge;
 using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Domain;
@@ -75,10 +76,11 @@ public static class WorkerEndpoints
             request.JudgeVersion, request.Status, request.FailureCode), http.Body, ct); return Results.NoContent();
         });
         workers.MapPost("/reference-jobs/{jobId:guid}/complete", async (Guid jobId, ClaimsPrincipal principal, ReferenceOutputCompletionRequest request,
-            IReferenceOutputQueue queue, CancellationToken ct) =>
+            IReferenceOutputQueue queue, IProblemTestSetPublisher publisher, CancellationToken ct) =>
         {
             var worker = CurrentWorker(principal); await queue.CompleteAsync(new(jobId,
-            request.OperationId, worker, request.LeaseToken, request.CompletedTests, request.JudgeVersion, request.SandboxBackend), ct); return Results.NoContent();
+            request.OperationId, worker, request.LeaseToken, request.CompletedTests, request.JudgeVersion, request.SandboxBackend), ct);
+            await publisher.PublishAsync(request.OperationId, ct); return Results.NoContent();
         });
         workers.MapPost("/reference-jobs/{jobId:guid}/fail", async (Guid jobId, ClaimsPrincipal principal, ReferenceOutputFailureRequest request,
             IReferenceOutputQueue queue, CancellationToken ct) =>
