@@ -13,6 +13,7 @@ public sealed class ProblemPackageValidator
     {
         var m = package.Manifest; var d = new List<PackageDiagnostic>();
         Add(!PackageFormat.IsSupported(m.FormatVersion), "package.version.unsupported", "Format version is unsupported.", "formatVersion");
+        Add(m.RequiredFeatures is { Count: > 0 }, "package.feature.unsupported", "Package requires unsupported critical features.", "requiredFeatures");
         Add(m.ProblemId == Guid.Empty, "package.id.invalid", "Problem ID is required.", "problemId");
         Add(string.IsNullOrWhiteSpace(m.Title) || m.Title.Length > 300, "package.title.invalid", "Title is invalid.", "title");
         Add(m.Authors.Count > 32 || m.Tags.Count > 64, "package.metadata.limit", "Author or tag count exceeds policy.");
@@ -39,8 +40,15 @@ public sealed class ProblemPackageValidator
         foreach (var checksum in m.Checksums)
             Add(!package.Entries.TryGetValue(checksum.Key, out var bytes) || !Regex.IsMatch(checksum.Value, "^[0-9a-f]{64}$") ||
                 bytes is not null && PackageChecksums.Sha256(bytes) != checksum.Value, "package.checksum.mismatch", "Entry checksum does not match.", path: checksum.Key);
+        var referenced = m.Statements.Values.Concat(m.Assets).Concat(m.Generators.Select(x => x.Path)).Concat(m.ReferenceSolutions.Select(x => x.Path))
+            .Concat(m.Tests.SelectMany(x => x.OutputPath is null ? new[] { x.InputPath } : new[] { x.InputPath, x.OutputPath })).ToHashSet(StringComparer.Ordinal);
+        foreach (var path in package.Entries.Keys.Where(x => x != "manifest.json" && x != "metadata/checksums.json" && IsCritical(x)))
+            Add(!referenced.Contains(path), "package.entry.unreferenced", "Critical package entry is not referenced by the manifest.", path: path);
         return d;
         void Add(bool condition, string code, string message, string? property = null, string? path = null)
         { if (condition) d.Add(new(code, PackageDiagnosticSeverity.Error, message, path, property)); }
+        static bool IsCritical(string path) => path.StartsWith("tests/", StringComparison.Ordinal) || path.StartsWith("solutions/", StringComparison.Ordinal) ||
+            path.StartsWith("generators/", StringComparison.Ordinal) || path.StartsWith("checkers/", StringComparison.Ordinal) ||
+            path.StartsWith("statement/", StringComparison.Ordinal) || path.StartsWith("assets/", StringComparison.Ordinal);
     }
 }

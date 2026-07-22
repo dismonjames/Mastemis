@@ -15,7 +15,7 @@ public sealed class PackageArchiveReader(PackageArchiveLimits limits)
     {
         await using var bounded = new MemoryStream();
         await CopyBoundedAsync(source, bounded, limits.MaximumCompressedBytes, cancellationToken);
-        var packageBytes = bounded.ToArray(); var entries = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var packageBytes = bounded.ToArray(); ZipFeatureInspector.Validate(packageBytes); var entries = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         var caseNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); long total = 0;
         try
         {
@@ -35,7 +35,12 @@ public sealed class PackageArchiveReader(PackageArchiveLimits limits)
                 total = checked(total + entry.Length);
                 if (total > limits.MaximumDecompressedBytes) Fail("package.total.limit", "Archive decompressed size exceeds its limit.");
                 await using var input = entry.Open(); using var output = new MemoryStream((int)entry.Length);
-                await CopyBoundedAsync(input, output, limits.MaximumEntryBytes, cancellationToken); entries[path] = output.ToArray();
+                await CopyBoundedAsync(input, output, limits.MaximumEntryBytes, cancellationToken);
+                var content = output.ToArray();
+                if (content.Length >= 4 && content[0] == (byte)'P' && content[1] == (byte)'K' &&
+                    content[2] is 3 or 5 or 7 && content[3] is 4 or 6 or 8)
+                    Fail("package.archive.nested", "Nested archive content is forbidden.", path);
+                entries[path] = content;
             }
         }
         catch (PackageValidationException) { throw; }

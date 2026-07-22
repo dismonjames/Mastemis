@@ -21,7 +21,8 @@ public sealed record ProblemPackageManifest(
     [property: JsonPropertyName("assets")] IReadOnlyList<string> Assets,
     [property: JsonPropertyName("checksums")] IReadOnlyDictionary<string, string> Checksums,
     [property: JsonPropertyName("createdBy")] string? CreatedBy = null,
-    [property: JsonPropertyName("signature")] PackageSignatureManifest? Signature = null);
+    [property: JsonPropertyName("signature")] PackageSignatureManifest? Signature = null,
+    [property: JsonPropertyName("requiredFeatures")] IReadOnlyList<string>? RequiredFeatures = null);
 
 public sealed record JudgeLimitsManifest(long TimeMilliseconds, long MemoryBytes, long OutputBytes);
 public sealed record CheckerManifest(string Type, IReadOnlyDictionary<string, string>? Configuration = null);
