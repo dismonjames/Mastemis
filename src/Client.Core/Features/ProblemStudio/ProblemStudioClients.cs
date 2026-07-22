@@ -6,6 +6,9 @@ public sealed record ProblemDraftSummary(Guid Id, string Title, string DefaultLo
 public sealed record MasDocument(string Source, string Sha256, int Revision, string RuntimeVersion);
 public sealed record MasDiagnostic(string Code, string Severity, string Message, int? Line = null, int? Column = null);
 public sealed record GenerationStatus(Guid Id, Guid ProblemId, string Status, int ProgressNumerator, int ProgressDenominator, string? FailureCode, Guid? PublishedTestSetId);
+public sealed record GenerationProgress(Guid OperationId, string Status, int Numerator, int Denominator, int GeneratedInputs,
+    int ExpectedOutputs, Guid? PublishedTestSetId, string? ReferenceJobStatus, DateTimeOffset UpdatedAtUtc);
+public sealed record GenerationDiagnostic(string Code, string Message);
 
 public interface IProblemDraftClient
 {
@@ -45,6 +48,8 @@ public interface IProblemGenerationClient
 {
     Task<GenerationStatus> StartAsync(Guid problemId, ulong seed, CancellationToken cancellationToken);
     Task<GenerationStatus?> GetAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken);
+    Task<GenerationProgress?> GetProgressAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<GenerationDiagnostic>> GetDiagnosticsAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken);
     Task CancelAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken);
 }
 
@@ -55,6 +60,10 @@ public sealed class ProblemGenerationClient(IApiTransport transport) : IProblemG
             ?? throw new InvalidDataException("The server returned an empty generation operation.");
     public Task<GenerationStatus?> GetAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken)
         => transport.GetAsync<GenerationStatus>($"/api/problem-studio/drafts/{problemId:D}/generation/{operationId:D}", cancellationToken);
+    public Task<GenerationProgress?> GetProgressAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken)
+        => transport.GetAsync<GenerationProgress>($"/api/problem-studio/drafts/{problemId:D}/generation/{operationId:D}/progress", cancellationToken);
+    public async Task<IReadOnlyList<GenerationDiagnostic>> GetDiagnosticsAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken)
+        => await transport.GetAsync<List<GenerationDiagnostic>>($"/api/problem-studio/drafts/{problemId:D}/generation/{operationId:D}/diagnostics?offset=0&limit=50", cancellationToken).ConfigureAwait(false) ?? [];
     public Task CancelAsync(Guid problemId, Guid operationId, CancellationToken cancellationToken)
         => transport.SendAsync(HttpMethod.Delete, $"/api/problem-studio/drafts/{problemId:D}/generation/{operationId:D}", new { }, null, cancellationToken);
 }
