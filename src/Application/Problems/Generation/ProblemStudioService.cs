@@ -52,10 +52,12 @@ public sealed class ProblemStudioService(IProblemStudioStore store, IAuthorizati
         var operation = await store.BeginGenerationAsync(problemId, seed, MasRuntime.RuntimeVersion, cancellationToken);
         try
         {
+            operation = await store.TransitionGenerationAsync(operation.Id, GenerationOperationStatus.Validating, 0, 1, cancellationToken);
             var report = new MasRuntime(new()).Generate(problem.MasSource, seed, cancellationToken);
             if (report.Diagnostics.Any(x => x.Severity == Mastemis.Mas.Language.Diagnostics.MasDiagnosticSeverity.Error))
                 throw new ApplicationFailure(ErrorCodes.InvalidInput, "MAS source contains errors.");
-            await store.PublishTestsAsync(operation, report.Tests.Select(x => (x.Index, x.Group, Encoding.UTF8.GetBytes(x.Input), x.Sha256)).ToArray(), cancellationToken);
+            operation = await store.TransitionGenerationAsync(operation.Id, GenerationOperationStatus.GeneratingInputs, 0, report.Tests.Count, cancellationToken);
+            await store.StageInputsAsync(operation, report.Tests.Select(x => (x.Index, x.Group, Encoding.UTF8.GetBytes(x.Input), x.Sha256)).ToArray(), cancellationToken);
             return (await store.GetGenerationAsync(operation.Id, cancellationToken))!;
         }
         catch (OperationCanceledException) { await store.CancelGenerationAsync(operation.Id, CancellationToken.None); throw; }

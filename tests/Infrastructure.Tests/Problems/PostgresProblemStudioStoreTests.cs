@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Mastemis.Application;
 using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
+using Mastemis.Application.Problems.Authoring;
 using Mastemis.Domain;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Problems;
@@ -43,16 +44,18 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
             const string source = "test 1 { input = int(1, 1) }";
             await store.SaveMasAsync(draft.Id, source, Hex(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(source))), TestContext.Current.CancellationToken);
             var operation = await store.BeginGenerationAsync(draft.Id, 42, "mas-runtime/1.0", TestContext.Current.CancellationToken); operationId = operation.Id;
+            operation = await store.TransitionGenerationAsync(operation.Id, GenerationOperationStatus.Validating, 0, 1, TestContext.Current.CancellationToken);
+            operation = await store.TransitionGenerationAsync(operation.Id, GenerationOperationStatus.GeneratingInputs, 0, 1, TestContext.Current.CancellationToken);
             var input = "1\n"u8.ToArray();
-            await store.PublishTestsAsync(operation, [(1, "default", input, Hex(SHA256.HashData(input)))], TestContext.Current.CancellationToken);
+            await store.StageInputsAsync(operation, [(1, "default", input, Hex(SHA256.HashData(input)))], TestContext.Current.CancellationToken);
         }
         await using var verification = Context();
         Assert.Equal("Durable", (await verification.ProblemDrafts.SingleAsync(x => x.Id == problemId, TestContext.Current.CancellationToken)).Title);
-        Assert.Equal(2, (await verification.ProblemGenerationOperations.SingleAsync(x => x.Id == operationId, TestContext.Current.CancellationToken)).Status);
+        Assert.Equal((int)GenerationOperationStatus.WaitingForReferenceOutputs, (await verification.ProblemGenerationOperations.SingleAsync(x => x.Id == operationId, TestContext.Current.CancellationToken)).Status);
         var test = await verification.GeneratedTests.SingleAsync(TestContext.Current.CancellationToken);
-        await using var inputStream = await storage.OpenReadAsync(test.InputObjectId, 100, TestContext.Current.CancellationToken);
-        Assert.Equal("1\n", await new StreamReader(inputStream).ReadToEndAsync(TestContext.Current.CancellationToken));
-        Assert.Contains(await verification.OutboxMessages.Select(x => x.Type).ToListAsync(TestContext.Current.CancellationToken), x => x == "GeneratedTestSetPublished");
+        var stagedPath = Path.Combine(_objects, ".staged", "test-input", $"{test.InputObjectId.Split('/')[2]}.bin");
+        Assert.Equal("1\n", await File.ReadAllTextAsync(stagedPath, TestContext.Current.CancellationToken));
+        Assert.Contains(await verification.OutboxMessages.Select(x => x.Type).ToListAsync(TestContext.Current.CancellationToken), x => x == "GenerationWaitingForReferenceOutputs");
     }
 
     public async ValueTask DisposeAsync()

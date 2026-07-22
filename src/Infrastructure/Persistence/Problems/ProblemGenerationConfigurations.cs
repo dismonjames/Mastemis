@@ -9,7 +9,8 @@ internal sealed class ProblemGenerationOperationConfiguration : IEntityTypeConfi
     {
         b.ToTable("problem_generation_operations"); b.HasKey(x => x.Id); b.Property(x => x.RuntimeVersion).HasMaxLength(64);
         b.Property(x => x.PrngAlgorithm).HasMaxLength(64); b.Property(x => x.FailureCode).HasMaxLength(100); b.Property(x => x.ConcurrencyToken).IsConcurrencyToken();
-        b.HasIndex(x => new { x.ProblemId, x.Status }); b.HasIndex(x => x.ProblemId).IsUnique().HasFilter("\"Status\" IN (0, 1)");
+        b.Property(x => x.MasSourceSha256).HasMaxLength(64); b.Property(x => x.DiagnosticSummary).HasMaxLength(4096);
+        b.HasIndex(x => new { x.ProblemId, x.Status }); b.HasIndex(x => x.ProblemId).IsUnique().HasFilter("\"Status\" IN (0, 1, 2, 3, 4, 7)");
         b.HasOne<ProblemDraftRow>().WithMany().HasForeignKey(x => x.ProblemId).OnDelete(DeleteBehavior.Restrict);
     }
 }

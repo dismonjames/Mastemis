@@ -30,4 +30,6 @@ public interface IProblemObjectReferenceLookup
 {
     Task<IReadOnlySet<string>> FindReferencedAsync(IReadOnlyCollection<string> objectIds,
         CancellationToken cancellationToken);
+    Task<IReadOnlySet<string>> FindRetainedStagedAsync(IReadOnlyCollection<string> objectIds,
+        CancellationToken cancellationToken);
 }

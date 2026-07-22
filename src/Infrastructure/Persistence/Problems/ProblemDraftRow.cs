@@ -14,4 +14,5 @@ public sealed class ProblemDraftRow
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
     public Guid ConcurrencyToken { get; set; }
+    public int Version { get; set; } = 1;
 }

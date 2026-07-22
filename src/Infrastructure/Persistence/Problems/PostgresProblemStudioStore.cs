@@ -3,6 +3,7 @@ using Mastemis.Application;
 using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
+using Mastemis.Application.Problems.Generation;
 using Mastemis.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +15,7 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
     public async Task<DraftProblem> CreateAsync(string title, string locale, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
-        var row = new ProblemDraftRow { Id = Guid.NewGuid(), Title = title, DefaultLocale = locale, CreatedAtUtc = now, UpdatedAtUtc = now, ConcurrencyToken = Guid.NewGuid() };
+        var row = new ProblemDraftRow { Id = Guid.NewGuid(), Title = title, DefaultLocale = locale, CreatedAtUtc = now, UpdatedAtUtc = now, ConcurrencyToken = Guid.NewGuid(), Version = 1 };
         db.ProblemDrafts.Add(row);
         db.ProblemAuthorAssignments.Add(new()
         {
@@ -39,7 +40,7 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
     public async Task SaveMasAsync(ProblemId problemId, string source, string sha256, CancellationToken cancellationToken)
     {
         var row = await FindProblemAsync(problemId, cancellationToken);
-        row.MasSource = source; row.MasSha256 = sha256; row.UpdatedAtUtc = clock.UtcNow; row.ConcurrencyToken = Guid.NewGuid();
+        row.MasSource = source; row.MasSha256 = sha256; row.UpdatedAtUtc = clock.UtcNow; row.ConcurrencyToken = Guid.NewGuid(); row.Version++;
         AddEvent("ProblemDraftUpdated", row.Id, new { problemId = row.Id, component = "mas" });
         await SaveAsync(cancellationToken);
     }
@@ -48,16 +49,20 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
         CancellationToken cancellationToken)
     {
         _ = await FindProblemAsync(problemId, cancellationToken);
-        var existing = await db.ProblemGenerationOperations.SingleOrDefaultAsync(x => x.ProblemId == problemId.Value && x.Status <= 1, cancellationToken);
+        var existing = await db.ProblemGenerationOperations.SingleOrDefaultAsync(x => x.ProblemId == problemId.Value && x.Status <= 4 || x.ProblemId == problemId.Value && x.Status == 7, cancellationToken);
         if (existing is not null) return Map(existing);
         var row = new ProblemGenerationOperationRow
         {
             Id = Guid.NewGuid(),
             ProblemId = problemId.Value,
+            DraftVersion = (await FindProblemAsync(problemId, cancellationToken)).Version,
+            ActorUserId = actor.UserId.Value,
             Status = (int)GenerationOperationStatus.Pending,
             Seed = seed,
             RuntimeVersion = runtimeVersion,
+            MasSourceSha256 = (await FindProblemAsync(problemId, cancellationToken)).MasSha256,
             CreatedAtUtc = clock.UtcNow,
+            UpdatedAtUtc = clock.UtcNow,
             ConcurrencyToken = Guid.NewGuid()
         };
         db.ProblemGenerationOperations.Add(row); AddEvent("GenerationStarted", problemId.Value, new { problemId = problemId.Value, operationId = row.Id });
@@ -65,7 +70,7 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
         return Map(row);
     }
 
-    public async Task PublishTestsAsync(ProblemGenerationOperation operation,
+    public async Task StageInputsAsync(ProblemGenerationOperation operation,
         IReadOnlyList<(int Index, string Group, byte[] Input, string Hash)> tests, CancellationToken cancellationToken)
     {
         if (tests.Count == 0 || tests.Select(x => x.Index).Distinct().Count() != tests.Count)
@@ -85,25 +90,26 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             var row = await db.ProblemGenerationOperations.SingleOrDefaultAsync(x => x.Id == operation.Id, cancellationToken)
                 ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Generation operation not found.");
-            if (row.Status == (int)GenerationOperationStatus.Completed)
+            if (row.Status == (int)GenerationOperationStatus.WaitingForReferenceOutputs)
             {
                 foreach (var item in staged) await objects.DeleteStagedAsync(item.ObjectId, cancellationToken);
                 return;
             }
-            if (row.Status is (int)GenerationOperationStatus.Failed or (int)GenerationOperationStatus.Cancelled)
+            if (row.Status != (int)GenerationOperationStatus.GeneratingInputs)
                 throw new ApplicationFailure(ErrorCodes.IdempotencyConflict, "Generation operation is terminal.");
             var version = (await db.GeneratedTestSets.Where(x => x.ProblemId == row.ProblemId).MaxAsync(x => (int?)x.Version, cancellationToken) ?? 0) + 1;
-            var set = new GeneratedTestSetRow { Id = Guid.NewGuid(), ProblemId = row.ProblemId, GenerationOperationId = row.Id, Version = version, Published = true, CreatedAtUtc = clock.UtcNow, PublishedAtUtc = clock.UtcNow };
+            var set = new GeneratedTestSetRow { Id = Guid.NewGuid(), ProblemId = row.ProblemId, GenerationOperationId = row.Id, Version = version, Published = false, CreatedAtUtc = clock.UtcNow };
             db.GeneratedTestSets.Add(set);
             for (var index = 0; index < tests.Count; index++)
             {
                 var test = orderedTests[index]; var item = staged[index];
                 db.GeneratedTests.Add(new() { Id = Guid.NewGuid(), TestSetId = set.Id, TestIndex = test.Index, Group = test.Group, InputObjectId = item.ObjectId, InputSha256 = item.Sha256, InputLength = item.Length });
             }
-            row.Status = (int)GenerationOperationStatus.Completed; row.CompletedAtUtc = clock.UtcNow; row.PublishedTestSetId = set.Id; row.ConcurrencyToken = Guid.NewGuid();
-            AddEvent("GeneratedTestSetPublished", row.ProblemId, new { problemId = row.ProblemId, operationId = row.Id, testSetId = set.Id, count = tests.Count });
+            row.Status = (int)GenerationOperationStatus.WaitingForReferenceOutputs; row.GeneratedInputCount = tests.Count;
+            row.RequestedTestCount = tests.Count; row.ProgressNumerator = tests.Count; row.ProgressDenominator = tests.Count * 2;
+            row.UpdatedAtUtc = clock.UtcNow; row.ConcurrencyToken = Guid.NewGuid();
+            AddEvent("GenerationWaitingForReferenceOutputs", row.ProblemId, new { problemId = row.ProblemId, operationId = row.Id, testSetId = set.Id, count = tests.Count });
             await SaveAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); committed = true;
-            foreach (var item in staged) await objects.MarkReferencedAsync(item.ObjectId, cancellationToken);
         }
         catch
         {
@@ -111,6 +117,21 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
                 foreach (var item in staged) await objects.DeleteStagedAsync(item.ObjectId, CancellationToken.None);
             throw;
         }
+    }
+
+    public async Task<ProblemGenerationOperation> TransitionGenerationAsync(Guid operationId, GenerationOperationStatus status,
+        int progressNumerator, int progressDenominator, CancellationToken cancellationToken)
+    {
+        var row = await db.ProblemGenerationOperations.SingleOrDefaultAsync(x => x.Id == operationId, cancellationToken)
+            ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Generation operation not found.");
+        var current = (GenerationOperationStatus)row.Status;
+        if (current == status) return Map(row);
+        if (!GenerationStateTransitions.CanTransition(current, status)) throw new ApplicationFailure(ErrorCodes.IdempotencyConflict, "Generation state transition is invalid.");
+        if (progressNumerator < 0 || progressDenominator < progressNumerator) throw new ApplicationFailure(ErrorCodes.InvalidInput, "Generation progress is invalid.");
+        row.Status = (int)status; row.ProgressNumerator = progressNumerator; row.ProgressDenominator = progressDenominator;
+        row.StartedAtUtc ??= clock.UtcNow; row.UpdatedAtUtc = clock.UtcNow; row.ConcurrencyToken = Guid.NewGuid();
+        AddEvent("GenerationProgressed", row.ProblemId, new { problemId = row.ProblemId, operationId = row.Id, status = status.ToString(), progressNumerator, progressDenominator });
+        await SaveAsync(cancellationToken); return Map(row);
     }
 
     public Task FailGenerationAsync(Guid operationId, string failureCode, CancellationToken cancellationToken) =>
@@ -129,8 +150,10 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
     {
         var row = await db.ProblemGenerationOperations.SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
             ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Generation operation not found.");
-        if (row.Status >= (int)GenerationOperationStatus.Completed) return;
-        row.Status = (int)status; row.CompletedAtUtc = clock.UtcNow; row.FailureCode = failureCode; row.ConcurrencyToken = Guid.NewGuid();
+        if (GenerationStateTransitions.IsTerminal((GenerationOperationStatus)row.Status)) return;
+        if (status == GenerationOperationStatus.Cancelled)
+        { row.Status = (int)GenerationOperationStatus.CancelRequested; row.CancellationRequestedAtUtc = clock.UtcNow; }
+        row.Status = (int)status; row.CompletedAtUtc = clock.UtcNow; row.UpdatedAtUtc = clock.UtcNow; row.FailureCode = failureCode; row.ConcurrencyToken = Guid.NewGuid();
         AddEvent(status == GenerationOperationStatus.Cancelled ? "GenerationCancelled" : "GenerationFailed", row.ProblemId,
             new { problemId = row.ProblemId, operationId = row.Id, failureCode });
         await SaveAsync(cancellationToken);
@@ -161,5 +184,6 @@ public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObj
     private static DraftProblem Map(ProblemDraftRow row) => new(new(row.Id), row.Title, row.DefaultLocale,
         new Dictionary<string, string>(), row.TimeLimitMilliseconds, row.MemoryLimitBytes, row.OutputLimitBytes, row.Checker, row.MasSource, row.MasSha256);
     private static ProblemGenerationOperation Map(ProblemGenerationOperationRow row) => new(row.Id, new(row.ProblemId),
-        (GenerationOperationStatus)row.Status, row.Seed, row.RuntimeVersion, row.CreatedAtUtc, row.CompletedAtUtc, row.FailureCode);
+        (GenerationOperationStatus)row.Status, row.Seed, row.RuntimeVersion, row.CreatedAtUtc, row.CompletedAtUtc, row.FailureCode,
+        row.ProgressNumerator, row.ProgressDenominator, row.GeneratedInputCount, row.ExpectedOutputCount, row.PublishedTestSetId);
 }

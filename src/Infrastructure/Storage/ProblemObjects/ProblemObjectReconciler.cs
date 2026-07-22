@@ -22,11 +22,13 @@ public sealed class ProblemObjectReconciler(string rootPath, IProblemObjectStora
         var identified = candidates.Select(path => (Path: path, ObjectId: GetObjectId(stagedRoot, path)))
             .Where(item => item.ObjectId is not null).Select(item => (item.Path, ObjectId: item.ObjectId!)).ToArray();
         var referenced = await references.FindReferencedAsync(identified.Select(item => item.ObjectId).ToArray(), cancellationToken);
+        var retained = await references.FindRetainedStagedAsync(identified.Select(item => item.ObjectId).ToArray(), cancellationToken);
         var removed = 0;
         foreach (var (_, objectId) in identified)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (referenced.Contains(objectId)) { await storage.MarkReferencedAsync(objectId, cancellationToken); continue; }
+            if (retained.Contains(objectId)) continue;
             await storage.DeleteStagedAsync(objectId, cancellationToken);
             removed++;
         }

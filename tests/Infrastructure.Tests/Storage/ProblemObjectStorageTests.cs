@@ -63,5 +63,7 @@ public sealed class ProblemObjectStorageTests : IAsyncDisposable
     {
         public Task<IReadOnlySet<string>> FindReferencedAsync(IReadOnlyCollection<string> objectIds, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlySet<string>>(new HashSet<string>(StringComparer.Ordinal));
+        public Task<IReadOnlySet<string>> FindRetainedStagedAsync(IReadOnlyCollection<string> objectIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<string>>(new HashSet<string>(StringComparer.Ordinal));
     }
 }
