@@ -39,6 +39,7 @@ public sealed class ApplicationUser : IdentityUser<Guid>
 {
     public string DisplayName { get; set; } = string.Empty;
     public DateTimeOffset CreatedAtUtc { get; set; }
+    public bool MustChangePassword { get; set; }
 }
 
 public sealed class ExamRow
