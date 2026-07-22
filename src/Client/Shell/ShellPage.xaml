@@ -1,0 +1,18 @@
+<Page x:Class="Mastemis.Client.Shell.ShellPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <NavigationView x:Name="Navigation" PaneDisplayMode="Auto" IsBackButtonVisible="Collapsed" IsSettingsVisible="False"
+                    ItemInvoked="Navigation_ItemInvoked" Background="{ThemeResource MastemisCanvasBrush}">
+        <NavigationView.PaneHeader>
+            <StackPanel Margin="8,12" Spacing="2"><TextBlock Text="Mastemis" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="{Binding ServerName}" Style="{StaticResource MastemisMutedTextStyle}"/></StackPanel>
+        </NavigationView.PaneHeader>
+        <NavigationView.PaneFooter>
+            <StackPanel Margin="8" Spacing="8">
+                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding RealtimeState}" Style="{StaticResource MastemisMutedTextStyle}"/>
+                <Button Content="Sign out" Command="{Binding LogoutCommand}" Visibility="{Binding IsAuthenticated, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+        </NavigationView.PaneFooter>
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
+</Page>

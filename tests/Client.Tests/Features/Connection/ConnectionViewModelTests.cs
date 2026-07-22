@@ -1,6 +1,7 @@
 using Mastemis.Client.Core.Features.Connection;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Session;
+using Mastemis.Client.Core.Navigation;
 
 namespace Mastemis.Client.Tests.Features.Connection;
 
@@ -19,7 +20,7 @@ public sealed class ConnectionViewModelTests
     public async Task SuccessfulProbeSelectsServer()
     {
         var session = new ClientSession();
-        var model = new ConnectionViewModel(new Probe(new(true, true, "1.0", null)), session) { ServerUrl = "https://example.test" };
+        var model = new ConnectionViewModel(new Probe(new(true, true, "1.0", null)), session, new ClientNavigator()) { ServerUrl = "https://example.test" };
         model.TestConnectionCommand.Execute(null);
         await WaitUntilAsync(() => model.StatusTitle is not null);
         Assert.Equal("Connected", model.StatusTitle);

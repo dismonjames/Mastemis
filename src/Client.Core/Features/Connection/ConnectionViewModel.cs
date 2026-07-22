@@ -3,6 +3,7 @@ using Mastemis.Client.Core.Common;
 using Mastemis.Client.Core.Common.Commands;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Session;
+using Mastemis.Client.Core.Navigation;
 
 namespace Mastemis.Client.Core.Features.Connection;
 
@@ -10,16 +11,18 @@ public sealed class ConnectionViewModel : ObservableObject
 {
     private readonly IServerProbe probe;
     private readonly ClientSession session;
+    private readonly IClientNavigator navigator;
     private string serverUrl = "https://localhost:5001";
     private ClientMode selectedMode = ClientMode.Connect;
     private bool isBusy;
     private string? statusTitle;
     private string? statusMessage;
 
-    public ConnectionViewModel(IServerProbe probe, ClientSession session)
+    public ConnectionViewModel(IServerProbe probe, ClientSession session, IClientNavigator navigator)
     {
         this.probe = probe;
         this.session = session;
+        this.navigator = navigator;
         TestConnectionCommand = new AsyncCommand(TestConnectionAsync);
     }
 
@@ -54,6 +57,7 @@ public sealed class ConnectionViewModel : ObservableObject
             session.SelectServer(uri, SelectedMode);
             StatusTitle = "Connected";
             StatusMessage = result.IsReady ? $"Server is ready{VersionSuffix(result.Version)}." : "Server is live but not ready.";
+            navigator.Navigate(ClientRoute.Login);
         }
         finally { IsBusy = false; }
     }
