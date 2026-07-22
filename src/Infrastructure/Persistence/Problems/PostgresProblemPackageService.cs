@@ -5,6 +5,7 @@ using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Packages;
 using Mastemis.Application.Problems.Statements;
+using Mastemis.Infrastructure.Storage.ProblemObjects.Exports;
 using Mastemis.Mas.Packaging.Archives;
 using Mastemis.Mas.Packaging.Exporting;
 using Mastemis.Mas.Packaging.Importing;
@@ -19,7 +20,7 @@ namespace Mastemis.Infrastructure.Persistence.Problems;
 public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblemObjectStorage objects, IClock clock,
     IAdministrationActor actor,
     IAuthorizationService authorization, PostgresProblemPackageImporter importer,
-    PostgresProblemPackageReplacer replacer) : IProblemPackageService
+    PostgresProblemPackageReplacer replacer, ProblemExportOptions exportOptions) : IProblemPackageService
 {
     private static readonly PackageArchiveLimits Limits = new();
     public async Task<ProblemPackageValidation> ValidateAsync(Stream package, CancellationToken cancellationToken)
@@ -100,7 +101,7 @@ public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblem
             ObjectId = staged.ObjectId,
             Length = staged.Length,
             CreatedAtUtc = clock.UtcNow,
-            ExpiresAtUtc = clock.UtcNow.AddDays(7),
+            ExpiresAtUtc = clock.UtcNow + exportOptions.Retention,
             Status = "Ready",
             IdempotencyKey = idempotencyKey
         };

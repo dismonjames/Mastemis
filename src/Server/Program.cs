@@ -21,6 +21,7 @@ using Mastemis.Infrastructure.Persistence.Outbox;
 using Mastemis.Infrastructure.Persistence.Problems;
 using Mastemis.Infrastructure.Persistence.Queue;
 using Mastemis.Infrastructure.Storage.ProblemObjects;
+using Mastemis.Infrastructure.Storage.ProblemObjects.Exports;
 using Mastemis.Infrastructure.Storage.Reconciliation;
 using Mastemis.Infrastructure.Storage.SourceRevisions;
 using Mastemis.Server.Authorization;
@@ -66,6 +67,11 @@ var problemReconciliationOptions = new ProblemObjectReconciliationOptions(storag
     reconciliationOptions.ScanInterval, reconciliationOptions.BatchSize);
 builder.Services.AddSingleton(problemReconciliationOptions);
 builder.Services.AddSingleton<ProblemObjectReconciliationStatus>();
+builder.Services.AddSingleton(new ProblemExportOptions(
+    TimeSpan.FromHours(int.TryParse(builder.Configuration["Storage:ExportRetentionHours"], out var retentionHours)
+        ? Math.Clamp(retentionHours, 1, 8760) : 168),
+    int.TryParse(builder.Configuration["Storage:ExportCleanupBatchSize"], out var exportBatchSize)
+        ? Math.Clamp(exportBatchSize, 1, 1000) : 100));
 var durableMode = !string.IsNullOrWhiteSpace(connectionString);
 if (durableMode)
 {
@@ -126,6 +132,7 @@ if (durableMode)
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemObjectReconciler>();
+    builder.Services.AddScoped<ProblemExportCleanupService>();
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
     builder.Services.AddScoped<ProblemStatementService>();

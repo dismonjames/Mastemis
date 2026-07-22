@@ -14,7 +14,7 @@ public sealed class PostgresProblemObjectReferenceLookup(MastemisDbContext db) :
             .Select(x => x.InputObjectId).ToListAsync(cancellationToken);
         var testOutputs = await db.GeneratedTests.AsNoTracking().Where(x => x.OutputObjectId != null && objectIds.Contains(x.OutputObjectId))
             .Select(x => x.OutputObjectId!).ToListAsync(cancellationToken);
-        var exports = await db.ProblemPackageExports.AsNoTracking().Where(x => objectIds.Contains(x.ObjectId))
+        var exports = await db.ProblemPackageExports.AsNoTracking().Where(x => x.Status == "Ready" && objectIds.Contains(x.ObjectId))
             .Select(x => x.ObjectId).ToListAsync(cancellationToken);
         var statements = await db.ProblemStatements.AsNoTracking().Where(x => objectIds.Contains(x.ObjectId))
             .Select(x => x.ObjectId).ToListAsync(cancellationToken);

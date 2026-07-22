@@ -1,4 +1,5 @@
 using Mastemis.Application;
+using Mastemis.Infrastructure.Storage.ProblemObjects.Exports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,8 @@ public sealed class ProblemObjectReconciliationService(IServiceScopeFactory scop
                 await using var scope = scopes.CreateAsyncScope();
                 await scope.ServiceProvider.GetRequiredService<ProblemObjectReconciler>()
                     .ReconcileAsync(clock.UtcNow - options.OrphanAge, options.BoundedBatchSize, stoppingToken);
+                await scope.ServiceProvider.GetRequiredService<ProblemExportCleanupService>()
+                    .CleanupAsync(clock.UtcNow, stoppingToken);
                 status.MarkSuccess(clock.UtcNow);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
