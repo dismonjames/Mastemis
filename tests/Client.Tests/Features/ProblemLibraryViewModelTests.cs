@@ -11,7 +11,8 @@ public sealed class ProblemLibraryViewModelTests
         var client = new DraftClientStub([
             Draft("Arrays"),
             Draft("Graph paths")]);
-        var viewModel = new ProblemLibraryViewModel(client);
+        var viewModel = new ProblemLibraryViewModel(client, new LibraryClientStub([
+            Item("Arrays"), Item("Graph paths")]));
 
         viewModel.RefreshCommand.Execute(null);
         await WaitUntilAsync(() => viewModel.Problems.Count == 2);
@@ -25,7 +26,7 @@ public sealed class ProblemLibraryViewModelTests
     public async Task Create_rejects_blank_title_without_calling_server()
     {
         var client = new DraftClientStub([]);
-        var viewModel = new ProblemLibraryViewModel(client) { NewTitle = "  " };
+        var viewModel = new ProblemLibraryViewModel(client, new LibraryClientStub([])) { NewTitle = "  " };
 
         viewModel.CreateCommand.Execute(null);
         await WaitUntilAsync(() => viewModel.HasError);
@@ -35,6 +36,7 @@ public sealed class ProblemLibraryViewModelTests
     }
 
     private static ProblemDraftSummary Draft(string title) => new(Guid.NewGuid(), title, "en", 1000, 268435456, 1048576, "exact", string.Empty);
+    private static ProblemLibraryItem Item(string title) => new(Guid.NewGuid(), title, "Draft", "Medium", [], [], null, 0, "Owner", DateTimeOffset.UtcNow);
 
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
@@ -52,5 +54,11 @@ public sealed class ProblemLibraryViewModelTests
             CreateCalls++;
             return Task.FromResult(Draft(title));
         }
+    }
+
+    private sealed class LibraryClientStub(IReadOnlyList<ProblemLibraryItem> values) : IProblemLibraryClient
+    {
+        public Task<Mastemis.Client.Core.Networking.Http.PagedResponse<ProblemLibraryItem>?> SearchAsync(string? search, CancellationToken cancellationToken) =>
+            Task.FromResult<Mastemis.Client.Core.Networking.Http.PagedResponse<ProblemLibraryItem>?>(new(values, 1, 100, values.Count));
     }
 }
