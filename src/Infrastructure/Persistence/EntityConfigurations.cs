@@ -87,3 +87,15 @@ internal sealed class TerminationMetadataConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<TerminationMetadataRow> b) { b.ToTable("termination_metadata"); b.HasKey(x => x.SessionId); b.HasIndex(x => x.WarningId).IsUnique(); b.HasIndex(x => x.FinalSubmissionId).IsUnique(); b.HasIndex(x => x.JudgeJobId).IsUnique(); }
 }
+internal sealed class EvidencePackageConfiguration : IEntityTypeConfiguration<EvidencePackageRow>
+{
+    public void Configure(EntityTypeBuilder<EvidencePackageRow> b) { b.ToTable("evidence_packages"); b.HasKey(x => x.Id); b.Property(x => x.LatestChainHash).HasMaxLength(64); b.HasIndex(x => new { x.ExamId, x.RoomId, x.CandidateId, x.CreatedAtUtc }); b.HasIndex(x => x.SessionId).IsUnique(); }
+}
+internal sealed class EvidenceItemConfiguration : IEntityTypeConfiguration<EvidenceItemRow>
+{
+    public void Configure(EntityTypeBuilder<EvidenceItemRow> b) { b.ToTable("evidence_items"); b.HasKey(x => x.Id); b.Property(x => x.ContentType).HasMaxLength(200); b.Property(x => x.ObjectId).HasMaxLength(300); b.Property(x => x.ContentHash).HasMaxLength(64); b.Property(x => x.PreviousChainHash).HasMaxLength(64); b.Property(x => x.MetadataJson).HasColumnType("jsonb"); b.HasIndex(x => new { x.PackageId, x.ServerTimestampUtc }); b.HasOne<EvidencePackageRow>().WithMany().HasForeignKey(x => x.PackageId).OnDelete(DeleteBehavior.Restrict); }
+}
+internal sealed class EvidenceReviewGrantConfiguration : IEntityTypeConfiguration<EvidenceReviewGrantRow>
+{
+    public void Configure(EntityTypeBuilder<EvidenceReviewGrantRow> b) { b.ToTable("evidence_review_grants"); b.HasKey(x => new { x.PackageId, x.ReviewerId }); b.HasIndex(x => x.ReviewerId); b.HasOne<EvidencePackageRow>().WithMany().HasForeignKey(x => x.PackageId).OnDelete(DeleteBehavior.Cascade); }
+}

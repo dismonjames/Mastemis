@@ -27,6 +27,9 @@ public sealed class MastemisDbContext(DbContextOptions<MastemisDbContext> option
     public DbSet<OutboxRow> OutboxMessages => Set<OutboxRow>();
     public DbSet<AuditRow> AuditRecords => Set<AuditRow>();
     public DbSet<TerminationMetadataRow> TerminationMetadata => Set<TerminationMetadataRow>();
+    public DbSet<EvidencePackageRow> EvidencePackages => Set<EvidencePackageRow>();
+    public DbSet<EvidenceItemRow> EvidenceItems => Set<EvidenceItemRow>();
+    public DbSet<EvidenceReviewGrantRow> EvidenceReviewGrants => Set<EvidenceReviewGrantRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,3 +103,6 @@ public sealed class IdempotencyRow { public string Operation { get; set; } = str
 public sealed class OutboxRow { public Guid Id { get; set; } public string Type { get; set; } = string.Empty; public int ContractVersion { get; set; } = 1; public string Payload { get; set; } = string.Empty; public string? ResourceId { get; set; } public DateTimeOffset OccurredAtUtc { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } public DateTimeOffset NextAttemptAtUtc { get; set; } public DateTimeOffset? ProcessedAtUtc { get; set; } public int Attempts { get; set; } public string? FailureCode { get; set; } }
 public sealed class AuditRow { public Guid Id { get; set; } public Guid? ActorUserId { get; set; } public Guid? WorkerId { get; set; } public string Action { get; set; } = string.Empty; public string ResourceType { get; set; } = string.Empty; public string ResourceId { get; set; } = string.Empty; public DateTimeOffset OccurredAtUtc { get; set; } public string MetadataJson { get; set; } = "{}"; }
 public sealed class TerminationMetadataRow { public Guid SessionId { get; set; } public Guid WarningId { get; set; } public Guid FrozenRevisionId { get; set; } public Guid FinalSubmissionId { get; set; } public Guid JudgeJobId { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } }
+public sealed class EvidencePackageRow { public Guid Id { get; set; } public Guid ExamId { get; set; } public Guid RoomId { get; set; } public Guid CandidateId { get; set; } public Guid SessionId { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } public string? LatestChainHash { get; set; } }
+public sealed class EvidenceItemRow { public Guid Id { get; set; } public Guid PackageId { get; set; } public int Type { get; set; } public DateTimeOffset ServerTimestampUtc { get; set; } public string ContentType { get; set; } = string.Empty; public string? ObjectId { get; set; } public string ContentHash { get; set; } = string.Empty; public string? PreviousChainHash { get; set; } public string MetadataJson { get; set; } = "{}"; }
+public sealed class EvidenceReviewGrantRow { public Guid PackageId { get; set; } public Guid ReviewerId { get; set; } public Guid GrantedByUserId { get; set; } public DateTimeOffset GrantedAtUtc { get; set; } }

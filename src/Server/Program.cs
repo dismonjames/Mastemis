@@ -2,13 +2,16 @@ using System.Diagnostics;
 using System.Threading.RateLimiting;
 using Mastemis.Application;
 using Mastemis.Application.Administration;
+using Mastemis.Application.Evidence;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
 using Mastemis.Infrastructure.Persistence;
+using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
 using Mastemis.Server.Authorization;
 using Mastemis.Server.Endpoints.Administration;
 using Mastemis.Server.Endpoints.Auth;
+using Mastemis.Server.Endpoints.Evidence;
 using Mastemis.Server.Endpoints.Examinations;
 using Mastemis.Server.Endpoints.Workers;
 using Microsoft.AspNetCore.Diagnostics;
@@ -72,6 +75,8 @@ if (durableMode)
     builder.Services.AddScoped<IHumanIdentityAdministration, HumanIdentityAdministration>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();
     builder.Services.AddScoped<IAdministrationActor, HttpAdministrationActor>();
+    builder.Services.AddScoped<IEvidenceMetadataAccess, EvidenceMetadataAccess>();
+    builder.Services.AddScoped<IEvidenceActor, HttpEvidenceActor>();
     builder.Services.AddScoped<IPasswordHasher<WorkerCredentialRow>, PasswordHasher<WorkerCredentialRow>>();
     builder.Services.AddScoped<Mastemis.Application.IAuthorizationService, ProductionApplicationAuthorization>();
     builder.Services.AddSingleton<OutboxStatus>();
@@ -142,7 +147,7 @@ app.MapGet("/api/system/version", () => Results.Ok(new
     version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0",
     telemetry = "none"
 }));
-if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); }
+if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); app.MapEvidenceEndpoints(); }
 app.MapExaminationEndpoints(durableMode);
 if (durableMode) app.MapWorkerEndpoints();
 app.MapHub<ExamHub>("/hubs/exam");
