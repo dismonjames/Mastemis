@@ -1,0 +1,28 @@
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFramework />
+    <TargetFrameworks>net10.0-desktop</TargetFrameworks>
+    <TargetFrameworks Condition="'$(MastemisBuildWebAssembly)' == 'true'">net10.0-browserwasm;net10.0-desktop</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UnoSingleProject>true</UnoSingleProject>
+    <ApplicationTitle>Mastemis</ApplicationTitle>
+    <ApplicationId>org.mastemis.client</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationPublisher>Mastemis</ApplicationPublisher>
+    <Description>Self-hosted programming contest and examination client.</Description>
+    <UnoFeatures>
+      Hosting;
+      Logging;
+      Mvvm;
+      Configuration;
+      Http;
+      Serialization;
+      Localization;
+      SkiaRenderer;
+    </UnoFeatures>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Client.Core/Mastemis.Client.Core.csproj" />
+  </ItemGroup>
+</Project>
