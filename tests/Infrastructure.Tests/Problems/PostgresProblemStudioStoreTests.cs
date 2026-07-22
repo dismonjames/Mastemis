@@ -3,6 +3,8 @@ using Mastemis.Application;
 using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
+using Mastemis.Contracts.Judge;
+using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Problems;
@@ -58,6 +60,24 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
         Assert.Contains(await verification.OutboxMessages.Select(x => x.Type).ToListAsync(TestContext.Current.CancellationToken), x => x == "GenerationWaitingForReferenceOutputs");
     }
 
+    [Fact]
+    public async Task Concurrent_reference_claimers_receive_job_once()
+    {
+        if (!DockerAvailable) Assert.Skip("Docker is unavailable; PostgreSQL reference queue was not executed.");
+        var operation = Guid.NewGuid(); var problem = Guid.NewGuid(); var worker = JudgeWorkerId.New();
+        await using (var db = Context())
+        {
+            db.ProblemDrafts.Add(new() { Id = problem, Title = "Reference", DefaultLocale = "en", CreatedAtUtc = DateTimeOffset.UtcNow, UpdatedAtUtc = DateTimeOffset.UtcNow, ConcurrencyToken = Guid.NewGuid() });
+            db.ProblemGenerationOperations.Add(new() { Id = operation, ProblemId = problem, DraftVersion = 1, ActorUserId = Guid.NewGuid(), Status = 3, Seed = 1, RuntimeVersion = "1", CreatedAtUtc = DateTimeOffset.UtcNow, UpdatedAtUtc = DateTimeOffset.UtcNow, ConcurrencyToken = Guid.NewGuid() });
+            db.JudgeWorkers.Add(new() { Id = worker.Value, Name = "reference", Capacity = 4, IsEnabled = true, CreatedAtUtc = DateTimeOffset.UtcNow, LanguagesJson = "[\"cpp\"]" });
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            await new PostgresReferenceOutputQueue(db, new Clock()).EnqueueAsync(Payload(operation, problem), 3, TestContext.Current.CancellationToken);
+        }
+        var claims = await Task.WhenAll(Enumerable.Range(0, 8).Select(async _ =>
+        { await using var db = Context(); return await new PostgresReferenceOutputQueue(db, new Clock()).ClaimAsync(worker, TimeSpan.FromMinutes(1), TestContext.Current.CancellationToken); }));
+        Assert.Single(claims, x => x is not null);
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_container is not null) await _container.DisposeAsync();
@@ -66,6 +86,11 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
 
     private MastemisDbContext Context() => new(new DbContextOptionsBuilder<MastemisDbContext>().UseNpgsql(_connectionString!).Options);
     private static string Hex(byte[] hash) => Convert.ToHexString(hash).ToLowerInvariant();
+    private static ReferenceOutputJobPayload Payload(Guid operation, Guid problem) => new(1, Guid.NewGuid(), operation, new(problem), 1,
+        Guid.NewGuid(), "cpp", [new("main.cpp", "problem/reference-source/00000000000000000000000000000000", new string('a', 64), 1)],
+        [new(1, "problem/test-input/00000000000000000000000000000000", new string('b', 64), 1)],
+        new(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), 64 * 1024 * 1024, 1024, 1024 * 1024, 4, 1,
+            TimeSpan.FromSeconds(10), 1024 * 1024), TimeSpan.FromMinutes(1));
     private sealed class Clock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
     private sealed class Actor : IAdministrationActor
     {

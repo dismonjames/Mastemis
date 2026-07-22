@@ -46,7 +46,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             "judge_workers", "worker_credentials", "judge_jobs", "idempotency_records", "outbox_messages", "audit_records", "termination_metadata",
             "evidence_packages", "evidence_items", "evidence_review_grants", "problem_drafts", "problem_statements",
             "problem_generation_operations", "generated_test_sets", "generated_tests", "problem_package_imports", "problem_package_exports",
-            "problem_author_assignments", "exam_problem_assignments", "problem_assets" })
+            "problem_author_assignments", "exam_problem_assignments", "problem_assets", "reference_output_jobs" })
             Assert.Contains(table, tables);
     }
 

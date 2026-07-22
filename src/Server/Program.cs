@@ -8,6 +8,7 @@ using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Authorization;
 using Mastemis.Application.Problems.Generation;
 using Mastemis.Application.Problems.Statements;
+using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
 using Mastemis.Infrastructure.Persistence;
@@ -116,6 +117,7 @@ if (durableMode)
     builder.Services.AddScoped<ProblemStatementService>();
     builder.Services.AddScoped<IProblemAssetStore, PostgresProblemAssetStore>();
     builder.Services.AddScoped<ProblemAssetService>();
+    builder.Services.AddScoped<IReferenceOutputQueue, PostgresReferenceOutputQueue>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();

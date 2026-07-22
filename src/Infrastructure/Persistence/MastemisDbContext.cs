@@ -43,6 +43,7 @@ public sealed class MastemisDbContext(DbContextOptions<MastemisDbContext> option
     public DbSet<ProblemAuthorAssignmentRow> ProblemAuthorAssignments => Set<ProblemAuthorAssignmentRow>();
     public DbSet<ExamProblemAssignmentRow> ExamProblemAssignments => Set<ExamProblemAssignmentRow>();
     public DbSet<ProblemAssetRow> ProblemAssets => Set<ProblemAssetRow>();
+    public DbSet<ReferenceOutputJobRow> ReferenceOutputJobs => Set<ReferenceOutputJobRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
