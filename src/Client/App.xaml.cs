@@ -14,6 +14,7 @@ using Mastemis.Client.Core.Features.ProblemStudio;
 using Mastemis.Client.Core.Features.Rooms;
 using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Features.Shell;
+using Mastemis.Client.Core.Features.Workers;
 using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Networking.Realtime;
@@ -62,6 +63,10 @@ public sealed partial class App : Application
         services.AddSingleton<IApiTransport, ApiTransport>();
         services.AddSingleton<IAuthenticationClient, AuthenticationClient>();
         services.AddSingleton<IExaminationClient, ExaminationClient>();
+        services.AddSingleton<IDashboardClient, DashboardClient>();
+        services.AddSingleton<IWorkerInventoryClient, WorkerInventoryClient>();
+        services.AddSingleton<IInvigilationClient, InvigilationClient>();
+        services.AddSingleton<IProblemLibraryClient, ProblemLibraryClient>();
         services.AddSingleton<IProblemDraftClient, ProblemDraftClient>();
         services.AddSingleton<IProblemMasClient, ProblemMasClient>();
         services.AddSingleton<IProblemGenerationClient, ProblemGenerationClient>();
@@ -86,6 +91,7 @@ public sealed partial class App : Application
         services.AddSingleton<HealthViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<AboutViewModel>();
+        services.AddSingleton<WorkerOperationsViewModel>();
         services.AddSingleton<ConnectionPage>();
         services.AddSingleton<LoginPage>();
         services.AddSingleton<DashboardPage>();
