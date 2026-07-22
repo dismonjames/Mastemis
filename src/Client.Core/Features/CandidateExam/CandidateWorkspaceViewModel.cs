@@ -22,7 +22,9 @@ public sealed class CandidateWorkspaceViewModel : ObservableObject
         this.client = client;
         LoadCommand = new AsyncCommand(LoadAsync); SaveCommand = new AsyncCommand(SaveAsync); SubmitCommand = new AsyncCommand(SubmitAsync);
     }
-    public ICommand LoadCommand { get; } public ICommand SaveCommand { get; } public ICommand SubmitCommand { get; }
+    public ICommand LoadCommand { get; }
+    public ICommand SaveCommand { get; }
+    public ICommand SubmitCommand { get; }
     public IReadOnlyList<string> Languages { get; } = ["cpp23", "csharp"];
     public string SessionId { get => sessionId; set => SetProperty(ref sessionId, value); }
     public string ProblemId { get => problemId; set => SetProperty(ref problemId, value); }

@@ -17,12 +17,17 @@ public sealed class ProblemStudioViewModel : ObservableObject
     }
     public ObservableCollection<ProblemDraftSummary> Drafts { get; } = [];
     public ObservableCollection<MasDiagnostic> Diagnostics { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand LoadCommand { get; } public ICommand SaveMasCommand { get; } public ICommand ValidateCommand { get; } public ICommand GenerateCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand LoadCommand { get; }
+    public ICommand SaveMasCommand { get; }
+    public ICommand ValidateCommand { get; }
+    public ICommand GenerateCommand { get; }
     public ProblemDraftSummary? SelectedDraft { get => selectedDraft; set => SetProperty(ref selectedDraft, value); }
     public string Source { get => source; set => SetProperty(ref source, value); }
     public string Seed { get => seed; set => SetProperty(ref seed, value); }
     public string Status { get => status; private set => SetProperty(ref status, value); }
-    public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } } public bool HasError => Error is not null;
+    public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } }
+    public bool HasError => Error is not null;
     private async Task RefreshAsync(CancellationToken ct) => await RunAsync(async () => { var values = await draftsClient.ListAsync(ct); Drafts.Clear(); foreach (var value in values) Drafts.Add(value); Status = $"{values.Count} authorized drafts"; }).ConfigureAwait(true);
     private async Task LoadAsync(CancellationToken ct) => await RunAsync(async () => { if (SelectedDraft is null) return; var value = await masClient.GetAsync(SelectedDraft.Id, ct); Source = value?.Source ?? string.Empty; Status = value is null ? "No MAS source" : $"MAS revision {value.Revision}"; }).ConfigureAwait(true);
     private async Task SaveMasAsync(CancellationToken ct) => await RunAsync(async () => { if (SelectedDraft is null) return; var current = await masClient.GetAsync(SelectedDraft.Id, ct); await masClient.UpdateAsync(SelectedDraft.Id, Source, current?.Revision ?? 0, ct); Status = "MAS source saved"; }).ConfigureAwait(true);

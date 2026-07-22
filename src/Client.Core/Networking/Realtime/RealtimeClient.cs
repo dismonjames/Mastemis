@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using Microsoft.AspNetCore.SignalR.Client;
 using Mastemis.Client.Core.Session;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Mastemis.Client.Core.Networking.Realtime;
 

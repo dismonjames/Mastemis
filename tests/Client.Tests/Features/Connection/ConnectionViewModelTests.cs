@@ -1,7 +1,7 @@
 using Mastemis.Client.Core.Features.Connection;
+using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Session;
-using Mastemis.Client.Core.Navigation;
 
 namespace Mastemis.Client.Tests.Features.Connection;
 

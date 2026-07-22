@@ -1,9 +1,9 @@
 using System.Windows.Input;
 using Mastemis.Client.Core.Common;
 using Mastemis.Client.Core.Common.Commands;
+using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Session;
-using Mastemis.Client.Core.Navigation;
 
 namespace Mastemis.Client.Core.Features.Connection;
 
