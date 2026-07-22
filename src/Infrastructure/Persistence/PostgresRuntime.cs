@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Mastemis.Infrastructure.Persistence;
 
 public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
-    : IAggregateStore, IUnitOfWork, IDurableJudgeQueue, ITransactionalOutbox
+    : IAggregateStore, IUnitOfWork, ITransactionalOutbox
 {
     private readonly Dictionary<ExamId, (Exam Domain, ExamRow Row)> _trackedExams = [];
     private readonly Dictionary<SessionId, (ExamSession Domain, SessionRow Row)> _trackedSessions = [];
@@ -49,7 +49,7 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
     public Task AddExamAsync(Exam exam, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var row = ToRow(exam);
+        var row = PersistenceMapper.ToRow(exam);
         db.Exams.Add(row);
         _trackedExams[exam.Id] = (exam, row);
         return Task.CompletedTask;
@@ -96,7 +96,7 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
     public Task AddSessionAsync(ExamSession session, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var row = ToRow(session);
+        var row = PersistenceMapper.ToRow(session);
         db.ExamSessions.Add(row);
         _trackedSessions[session.Id] = (session, row);
         return Task.CompletedTask;
@@ -137,19 +137,19 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
     public Task AddSubmissionAsync(Submission submission, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        db.Submissions.Add(ToRow(submission));
+        db.Submissions.Add(PersistenceMapper.ToRow(submission));
         return Task.CompletedTask;
     }
 
     public async Task<Submission?> GetSubmissionAsync(SubmissionId id, CancellationToken cancellationToken)
     {
         var row = await db.Submissions.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id.Value, cancellationToken);
-        return row is null ? null : ToDomain(row);
+        return row is null ? null : PersistenceMapper.ToDomain(row);
     }
 
     public async Task<IReadOnlyList<Submission>> GetSubmissionsAsync(SessionId sessionId, CancellationToken cancellationToken) =>
         (await db.Submissions.AsNoTracking().Where(x => x.SessionId == sessionId.Value)
-            .OrderByDescending(x => x.CreatedAtUtc).ToListAsync(cancellationToken)).Select(ToDomain).ToArray();
+            .OrderByDescending(x => x.CreatedAtUtc).ToListAsync(cancellationToken)).Select(PersistenceMapper.ToDomain).ToArray();
 
     public Task AddEventAsync(ViolationEvent activityEvent, CancellationToken cancellationToken)
     {
@@ -217,7 +217,7 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
     public Task AddJudgeJobAsync(JudgeJob job, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!db.JudgeJobs.Local.Any(x => x.Id == job.Id.Value)) db.JudgeJobs.Add(ToRow(job));
+        if (!db.JudgeJobs.Local.Any(x => x.Id == job.Id.Value)) db.JudgeJobs.Add(PersistenceMapper.ToRow(job));
         return Task.CompletedTask;
     }
 
@@ -261,48 +261,6 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
         return new ExamSummary(examId, active, disconnected, warnings, terminated, queued);
     }
 
-    public Task EnqueueAsync(JudgeJob job, CancellationToken cancellationToken) => AddJudgeJobAsync(job, cancellationToken);
-
-    public async Task<JudgeJob?> ClaimAsync(JudgeWorkerId workerId, TimeSpan lease, CancellationToken cancellationToken)
-    {
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var now = clock.UtcNow;
-        var row = await db.JudgeJobs.FromSqlInterpolated($$"""
-            SELECT * FROM judge_jobs
-            WHERE (("State" = {{(int)JudgeJobState.Pending}} AND "AvailableAtUtc" <= {{now}})
-                OR ("State" = {{(int)JudgeJobState.Claimed}} AND "LeaseExpiresAtUtc" <= {{now}}))
-              AND "Attempt" < "MaximumAttempts"
-            ORDER BY "Priority" DESC, "CreatedAtUtc"
-            FOR UPDATE SKIP LOCKED
-            LIMIT 1
-            """).SingleOrDefaultAsync(cancellationToken);
-        if (row is null) { await transaction.CommitAsync(cancellationToken); return null; }
-        row.State = (int)JudgeJobState.Claimed; row.WorkerId = workerId.Value; row.LeaseId = Guid.NewGuid();
-        row.LeaseExpiresAtUtc = now + lease; row.Attempt++; row.ConcurrencyToken = Guid.NewGuid();
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return ToDomain(row);
-    }
-
-    public async Task CompleteAsync(JudgeJobId jobId, Judgement judgement, CancellationToken cancellationToken)
-    {
-        var row = await db.JudgeJobs.SingleOrDefaultAsync(x => x.Id == jobId.Value, cancellationToken)
-            ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Judge job not found.");
-        if (row.SubmissionId != judgement.SubmissionId.Value)
-            throw new ApplicationFailure(ErrorCodes.LeaseRejected, "The judgement does not match this job.");
-        if (row.State == (int)JudgeJobState.Completed) return;
-        row.State = (int)JudgeJobState.Completed; row.CompletedAtUtc = judgement.CompletedAtUtc;
-        row.LeaseExpiresAtUtc = null; row.ConcurrencyToken = Guid.NewGuid();
-        db.Judgements.Add(new JudgementRow
-        {
-            SubmissionId = judgement.SubmissionId.Value,
-            Verdict = (int)judgement.Verdict,
-            Score = judgement.Score,
-            CompletedAtUtc = judgement.CompletedAtUtc
-        });
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
     public Task AddAsync<T>(T message, CancellationToken cancellationToken) where T : notnull
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -311,7 +269,7 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
             Id = Guid.NewGuid(),
             Type = typeof(T).FullName ?? typeof(T).Name,
             Payload = JsonSerializer.Serialize(message),
-            ResourceId = GetResourceId(message),
+            ResourceId = PersistenceMapper.GetResourceId(message),
             OccurredAtUtc = clock.UtcNow,
             CreatedAtUtc = clock.UtcNow,
             NextAttemptAtUtc = clock.UtcNow
@@ -323,12 +281,12 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
     {
         foreach (var pair in _trackedExams.Values)
         {
-            var source = ToRow(pair.Domain); pair.Row.Title = source.Title; pair.Row.State = source.State;
+            var source = PersistenceMapper.ToRow(pair.Domain); pair.Row.Title = source.Title; pair.Row.State = source.State;
             pair.Row.StartsAtUtc = source.StartsAtUtc; pair.Row.EndsAtUtc = source.EndsAtUtc;
         }
         foreach (var pair in _trackedSessions.Values)
         {
-            var source = ToRow(pair.Domain); pair.Row.State = source.State; pair.Row.StartedAtUtc = source.StartedAtUtc;
+            var source = PersistenceMapper.ToRow(pair.Domain); pair.Row.State = source.State; pair.Row.StartedAtUtc = source.StartedAtUtc;
             pair.Row.TerminatedAtUtc = source.TerminatedAtUtc; pair.Row.CurrentRevisionId = source.CurrentRevisionId;
             pair.Row.FrozenRevisionId = source.FrozenRevisionId; pair.Row.Version = source.Version;
             pair.Row.ConcurrencyToken = Guid.NewGuid();
@@ -348,64 +306,4 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
         }
     }
 
-    private static ExamRow ToRow(Exam exam) => new()
-    {
-        Id = exam.Id.Value,
-        Title = exam.Title,
-        State = (int)exam.State,
-        CreatedAtUtc = exam.CreatedAtUtc,
-        StartsAtUtc = exam.StartsAtUtc,
-        EndsAtUtc = exam.EndsAtUtc
-    };
-    private static SessionRow ToRow(ExamSession session) => new()
-    {
-        Id = session.Id.Value,
-        ExamId = session.ExamId.Value,
-        RoomId = session.RoomId.Value,
-        CandidateId = session.CandidateId.Value,
-        State = (int)session.State,
-        StartedAtUtc = session.StartedAtUtc,
-        TerminatedAtUtc = session.TerminatedAtUtc,
-        CurrentRevisionId = session.CurrentRevisionId?.Value,
-        FrozenRevisionId = session.FrozenRevisionId?.Value,
-        Version = session.Version,
-        ConcurrencyToken = Guid.NewGuid()
-    };
-    private static SubmissionRow ToRow(Submission submission) => new()
-    {
-        Id = submission.Id.Value,
-        SessionId = submission.SessionId.Value,
-        ProblemId = submission.ProblemId.Value,
-        RevisionId = submission.RevisionId.Value,
-        Language = submission.Language,
-        State = (int)submission.State,
-        IsFinal = submission.IsFinal,
-        CreatedAtUtc = submission.CreatedAtUtc
-    };
-    private static Submission ToDomain(SubmissionRow row) => new(new SubmissionId(row.Id), new SessionId(row.SessionId),
-        new ProblemId(row.ProblemId), new SourceRevisionId(row.RevisionId), row.Language, row.CreatedAtUtc, row.IsFinal)
-    { State = (SubmissionState)row.State };
-    private static JudgeJobRow ToRow(JudgeJob job) => new()
-    {
-        Id = job.Id.Value,
-        SubmissionId = job.SubmissionId.Value,
-        State = (int)job.State,
-        Attempt = job.Attempt,
-        CreatedAtUtc = job.CreatedAtUtc,
-        AvailableAtUtc = job.CreatedAtUtc,
-        LeaseExpiresAtUtc = job.LeaseExpiresAtUtc,
-        WorkerId = job.WorkerId?.Value,
-        ConcurrencyToken = Guid.NewGuid()
-    };
-    private static JudgeJob ToDomain(JudgeJobRow row) => new(new JudgeJobId(row.Id), new SubmissionId(row.SubmissionId),
-        (JudgeJobState)row.State, row.Attempt, row.CreatedAtUtc, row.LeaseExpiresAtUtc,
-        row.WorkerId is { } worker ? new JudgeWorkerId(worker) : null);
-    private static string? GetResourceId<T>(T message) => message switch
-    {
-        SessionTerminated value => value.SessionId.Value.ToString("D"),
-        WarningIssued value => value.SessionId.Value.ToString("D"),
-        DraftSaved value => value.SessionId.Value.ToString("D"),
-        SubmissionCreated value => value.SessionId.Value.ToString("D"),
-        _ => null
-    };
 }
