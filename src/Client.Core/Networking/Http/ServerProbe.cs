@@ -21,7 +21,7 @@ public sealed class ServerProbe(IHttpClientFactory clients) : IServerProbe
             string? version = null;
             try
             {
-                var document = await client.GetFromJsonAsync<Dictionary<string, string>>(new Uri(baseUri, "/api/version"), cancellationToken).ConfigureAwait(false);
+                var document = await client.GetFromJsonAsync<Dictionary<string, string>>(new Uri(baseUri, "/api/system/version"), cancellationToken).ConfigureAwait(false);
                 document?.TryGetValue("version", out version);
             }
             catch (HttpRequestException) { }
