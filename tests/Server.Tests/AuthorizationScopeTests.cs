@@ -46,6 +46,18 @@ public sealed class AuthorizationScopeTests
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         var authorization = CreateAuthorization(db, user, MastemisRoles.Candidate);
         await Assert.ThrowsAsync<ApplicationFailure>(async () => await authorization.EnsureAsync("session.write", session, TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<ApplicationFailure>(async () => await authorization.EnsureAsync("candidate.realtime", candidate, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Chief_realtime_access_requires_an_explicit_assignment()
+    {
+        await using var db = CreateContext(); var user = Guid.NewGuid(); var exam = Guid.NewGuid();
+        var authorization = CreateAuthorization(db, user, MastemisRoles.ChiefInvigilator);
+        await Assert.ThrowsAsync<ApplicationFailure>(async () => await authorization.EnsureAsync("chief.realtime", exam, TestContext.Current.CancellationToken));
+        db.ExamAssignments.Add(new ExamAssignmentRow { ExamId = exam, UserId = user, Role = MastemisRoles.ChiefInvigilator });
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await authorization.EnsureAsync("chief.realtime", exam, TestContext.Current.CancellationToken);
     }
 
     private static ProductionApplicationAuthorization CreateAuthorization(MastemisDbContext db, Guid userId, string role)

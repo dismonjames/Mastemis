@@ -15,6 +15,7 @@ using Mastemis.Server.Endpoints.Auth;
 using Mastemis.Server.Endpoints.Evidence;
 using Mastemis.Server.Endpoints.Examinations;
 using Mastemis.Server.Endpoints.Workers;
+using Mastemis.Server.Realtime;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
@@ -84,6 +85,7 @@ if (durableMode)
     builder.Services.AddSingleton<IOutboxPublisher, SignalROutboxPublisher>();
     builder.Services.AddScoped<IOutboxDeliveryStore, PostgresOutboxDeliveryStore>();
     builder.Services.AddScoped<OutboxBatchProcessor>();
+    builder.Services.AddScoped<RealtimeRouteResolver>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHealthChecks()

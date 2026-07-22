@@ -92,12 +92,12 @@ public sealed class ExamHub : Hub
     }
 
     public Task JoinRoom(string roomId) => JoinAuthorizedAsync("room.realtime", "room", roomId);
-    public Task JoinCandidate(string candidateId) => JoinAuthorizedAsync("session.start", "candidate", candidateId);
+    public Task JoinCandidate(string candidateId) => JoinAuthorizedAsync("candidate.realtime", "candidate", candidateId);
     public async Task JoinChief(string examId)
     {
         if (!Guid.TryParse(examId, out var parsed)) throw new HubException(ErrorCodes.InvalidInput);
         var authorization = Context.GetHttpContext()!.RequestServices.GetRequiredService<Mastemis.Application.IAuthorizationService>();
-        await authorization.EnsureAsync("exam.realtime", parsed, Context.ConnectionAborted);
+        await authorization.EnsureAsync("chief.realtime", parsed, Context.ConnectionAborted);
         await Groups.AddToGroupAsync(Context.ConnectionId, $"chief:{parsed:D}", Context.ConnectionAborted);
     }
 

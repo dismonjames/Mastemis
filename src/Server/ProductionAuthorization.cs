@@ -25,7 +25,11 @@ public sealed class ProductionApplicationAuthorization(IHttpContextAccessor acce
             "warning.issue" or "sfe.evaluate" => roles.Contains(MastemisRoles.ChiefInvigilator) &&
                 await HasSessionExamAssignmentAsync(scopeId, userId, MastemisRoles.ChiefInvigilator, cancellationToken),
             "exam.realtime" => await CanAccessExamAsync(scopeId, userId, roles, cancellationToken),
+            "chief.realtime" => roles.Contains(MastemisRoles.ChiefInvigilator) &&
+                await HasExamAssignmentAsync(scopeId, userId, MastemisRoles.ChiefInvigilator, cancellationToken),
             "room.realtime" => await CanAccessRoomAsync(scopeId, userId, roles, cancellationToken),
+            "candidate.realtime" => roles.Contains(MastemisRoles.Candidate) &&
+                await CanAccessCandidateRealtimeAsync(scopeId, userId, cancellationToken),
             "session.start" => await OwnsCandidateAsync(scopeId, userId, cancellationToken),
             "session.access" or "session.write" or "submission.create" or "sfe.record" =>
                 await CanAccessSessionAsync(scopeId, userId, roles, cancellationToken),
@@ -56,6 +60,11 @@ public sealed class ProductionApplicationAuthorization(IHttpContextAccessor acce
     }
     private Task<bool> OwnsCandidateAsync(Guid candidateId, Guid userId, CancellationToken ct) =>
         db.Candidates.AnyAsync(x => x.Id == candidateId && x.UserId == userId, ct);
+    private Task<bool> CanAccessCandidateRealtimeAsync(Guid candidateId, Guid userId, CancellationToken ct) =>
+        (from candidate in db.Candidates
+         join registration in db.CandidateRegistrations on candidate.Id equals registration.CandidateId
+         where candidate.Id == candidateId && candidate.UserId == userId && registration.AccessState == (int)CandidateExamAccessState.Enabled
+         select registration).AnyAsync(ct);
     private async Task<bool> CanAccessSessionAsync(Guid sessionId, Guid userId, HashSet<string> roles, CancellationToken ct)
     {
         var data = await (from session in db.ExamSessions
