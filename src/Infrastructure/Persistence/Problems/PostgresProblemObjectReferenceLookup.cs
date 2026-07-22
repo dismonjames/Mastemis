@@ -20,7 +20,9 @@ public sealed class PostgresProblemObjectReferenceLookup(MastemisDbContext db) :
             .Select(x => x.ObjectId).ToListAsync(cancellationToken);
         var assets = await db.ProblemAssets.AsNoTracking().Where(x => objectIds.Contains(x.ObjectId))
             .Select(x => x.ObjectId).ToListAsync(cancellationToken);
-        return testInputs.Concat(testOutputs).Concat(exports).Concat(statements).Concat(assets).ToHashSet(StringComparer.Ordinal);
+        var references = await db.ReferenceSolutionSources.AsNoTracking().Where(x => objectIds.Contains(x.ObjectId))
+            .Select(x => x.ObjectId).ToListAsync(cancellationToken);
+        return testInputs.Concat(testOutputs).Concat(exports).Concat(statements).Concat(assets).Concat(references).ToHashSet(StringComparer.Ordinal);
     }
 
     public async Task<IReadOnlySet<string>> FindRetainedStagedAsync(IReadOnlyCollection<string> objectIds, CancellationToken cancellationToken)

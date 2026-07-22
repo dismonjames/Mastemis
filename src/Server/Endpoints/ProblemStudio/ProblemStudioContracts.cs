@@ -10,6 +10,8 @@ public sealed record PreviewMasRequest(string Source, ulong Seed, int MaximumTes
 public sealed record StartGenerationRequest(ulong Seed);
 public sealed record AssignProblemAuthorRequest(ProblemAuthorRole Role, DateTimeOffset? ExpiresAtUtc);
 public sealed record UpdateProblemStatementRequest(ProblemStatementContent Content, int? ExpectedRevision);
+public sealed record ReferenceSolutionSourceRequest(string FileName, string ContentBase64);
+public sealed record UpdateReferenceSolutionRequest(string Language, IReadOnlyList<ReferenceSolutionSourceRequest> Sources);
 
 public sealed record ProblemDraftResponse(Guid Id, string Title, string DefaultLocale, long TimeLimitMilliseconds,
     long MemoryLimitBytes, long OutputLimitBytes, string Checker, string MasSha256);

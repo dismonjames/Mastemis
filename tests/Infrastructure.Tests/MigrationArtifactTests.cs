@@ -13,7 +13,7 @@ public sealed class MigrationArtifactTests
         using var db = new MastemisDbContext(new DbContextOptionsBuilder<MastemisDbContext>()
             .UseNpgsql("Host=localhost;Database=unused;Username=unused").Options);
         var migrations = db.Database.GetMigrations().ToArray();
-        Assert.Equal(10, migrations.Length);
+        Assert.Equal(11, migrations.Length);
         Assert.EndsWith("_InitialProduction", migrations[0], StringComparison.Ordinal);
         Assert.EndsWith("_AddHumanAdministration", migrations[1], StringComparison.Ordinal);
         Assert.EndsWith("_AddEvidenceMetadata", migrations[2], StringComparison.Ordinal);
@@ -24,6 +24,7 @@ public sealed class MigrationArtifactTests
         Assert.EndsWith("_AddProblemAssets", migrations[7], StringComparison.Ordinal);
         Assert.EndsWith("_ExpandProblemGenerationState", migrations[8], StringComparison.Ordinal);
         Assert.EndsWith("_AddReferenceOutputQueue", migrations[9], StringComparison.Ordinal);
+        Assert.EndsWith("_AddReferenceSolutionRevisions", migrations[10], StringComparison.Ordinal);
         var script = db.GetService<IMigrator>().GenerateScript(options: MigrationsSqlGenerationOptions.Idempotent);
         Assert.Contains("CREATE TABLE exams", script, StringComparison.Ordinal);
         Assert.Contains("CREATE TABLE judge_jobs", script, StringComparison.Ordinal);
@@ -37,6 +38,8 @@ public sealed class MigrationArtifactTests
         Assert.Contains("CREATE TABLE exam_problem_assignments", script, StringComparison.Ordinal);
         Assert.Contains("CREATE TABLE problem_assets", script, StringComparison.Ordinal);
         Assert.Contains("CREATE TABLE reference_output_jobs", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE reference_solution_revisions", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE reference_solution_sources", script, StringComparison.Ordinal);
     }
 
 }
