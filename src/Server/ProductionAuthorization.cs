@@ -19,6 +19,7 @@ public sealed class ProductionApplicationAuthorization(IHttpContextAccessor acce
         var allowed = permission switch
         {
             "exam.create" => HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager),
+            "problem.create" or "problem.manage" => HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager),
             "exam.manage" or "room.create" or "candidate.register" =>
                 HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager) ||
                 await HasExamAssignmentAsync(scopeId, userId, MastemisRoles.ExamManager, cancellationToken),

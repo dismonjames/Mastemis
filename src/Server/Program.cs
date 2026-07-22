@@ -22,6 +22,7 @@ using Mastemis.Server.Endpoints.Administration;
 using Mastemis.Server.Endpoints.Auth;
 using Mastemis.Server.Endpoints.Evidence;
 using Mastemis.Server.Endpoints.Examinations;
+using Mastemis.Server.Endpoints.ProblemStudio;
 using Mastemis.Server.Endpoints.Workers;
 using Mastemis.Server.Realtime;
 using Microsoft.AspNetCore.Diagnostics;
@@ -176,7 +177,7 @@ app.MapGet("/api/system/version", () => Results.Ok(new
     version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0",
     telemetry = "none"
 }));
-if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); app.MapEvidenceEndpoints(); }
+if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); app.MapEvidenceEndpoints(); app.MapProblemStudioEndpoints(); }
 app.MapExaminationEndpoints(durableMode);
 if (durableMode) app.MapWorkerEndpoints();
 app.MapHub<ExamHub>("/hubs/exam");
