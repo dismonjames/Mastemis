@@ -23,3 +23,9 @@ public interface IProblemObjectStorage
 
     Task DeleteStagedAsync(string objectId, CancellationToken cancellationToken);
 }
+
+public interface IProblemObjectReferenceLookup
+{
+    Task<IReadOnlySet<string>> FindReferencedAsync(IReadOnlyCollection<string> objectIds,
+        CancellationToken cancellationToken);
+}

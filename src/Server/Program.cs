@@ -3,13 +3,18 @@ using System.Threading.RateLimiting;
 using Mastemis.Application;
 using Mastemis.Application.Administration;
 using Mastemis.Application.Evidence;
+using Mastemis.Application.Problems.Assets;
+using Mastemis.Application.Problems.Authoring;
+using Mastemis.Application.Problems.Generation;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
 using Mastemis.Infrastructure.Persistence.Outbox;
+using Mastemis.Infrastructure.Persistence.Problems;
 using Mastemis.Infrastructure.Persistence.Queue;
+using Mastemis.Infrastructure.Storage.ProblemObjects;
 using Mastemis.Infrastructure.Storage.Reconciliation;
 using Mastemis.Infrastructure.Storage.SourceRevisions;
 using Mastemis.Server.Authorization;
@@ -100,6 +105,9 @@ if (durableMode)
     builder.Services.AddScoped<OutboxBatchProcessor>();
     builder.Services.AddScoped<RealtimeRouteResolver>();
     builder.Services.AddScoped<SourceObjectReconciler>();
+    builder.Services.AddScoped<IProblemStudioStore, PostgresProblemStudioStore>();
+    builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
+    builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();
@@ -127,6 +135,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Audit", policy => policy.RequireRole(MastemisRoles.Administrator));
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ISourceRevisionStorage>(_ => new FileSourceRevisionStorage(storageRoot));
+builder.Services.AddSingleton<IProblemObjectStorage>(sp => new FileProblemObjectStorage(storageRoot, sp.GetRequiredService<IClock>()));
 builder.Services.AddScoped<MastemisService>();
 
 var app = builder.Build();
