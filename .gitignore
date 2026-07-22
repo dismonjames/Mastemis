@@ -18,6 +18,8 @@ deploy/compose/data/
 *.sqlite
 *.sqlite3
 storage/
+judge-data/
+workspaces/
 evidence/
 screenshots/
 *.mas

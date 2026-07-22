@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Mastemis.Judge.Checking;
 using Mastemis.Judge.Configuration;
 using Mastemis.Judge.Execution;
@@ -21,6 +22,35 @@ var workerOptions = new JudgeWorkerOptions(serverUrl, new(workerId), configurati
     TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(30), workspace);
 var sandboxOptions = new OciSandboxOptions(configuration["Sandbox:RuntimePath"] ?? "/usr/bin/podman",
     configuration["Sandbox:Image"] ?? "localhost/mastemis-judge:0.1.0", configuration["Sandbox:ContainerUser"] ?? "1000:1000");
+if (args.Contains("--probe", StringComparer.Ordinal))
+{
+    var sandbox = await new OciSandboxCapabilityProbe(sandboxOptions).ProbeAsync(CancellationToken.None);
+    var workspaceWritable = ProbeWorkspace(workspace);
+    var result = new
+    {
+        ready = sandbox.MeetsMandatoryRequirements && workspaceWritable && File.Exists(configuration["Toolchains:Cpp"] ?? "/usr/bin/g++") && File.Exists(configuration["Toolchains:Dotnet"] ?? "/usr/bin/dotnet"),
+        sandbox = new
+        {
+            sandbox.Available,
+            sandbox.Backend,
+            sandbox.Version,
+            sandbox.Rootless,
+            sandbox.Cgroups,
+            sandbox.MemoryLimit,
+            sandbox.ProcessLimit,
+            sandbox.NetworkIsolation,
+            sandbox.ReadOnlyFilesystem,
+            sandbox.ResourceMeasurement,
+            sandbox.UnavailableReason
+        },
+        cppAvailable = File.Exists(configuration["Toolchains:Cpp"] ?? "/usr/bin/g++"),
+        dotnetAvailable = File.Exists(configuration["Toolchains:Dotnet"] ?? "/usr/bin/dotnet"),
+        workspaceWritable
+    };
+    Console.WriteLine(JsonSerializer.Serialize(result));
+    Environment.ExitCode = result.ready ? 0 : 1;
+    return;
+}
 builder.Services.AddSingleton(workerOptions); builder.Services.AddSingleton(sandboxOptions);
 builder.Services.AddSingleton<JudgeWorkerHealthState>(); builder.Services.AddSingleton<IJudgeClock, SystemJudgeClock>();
 builder.Services.AddSingleton<IJudgeWorkspaceManager>(_ => new JudgeWorkspaceManager(workspace));
@@ -34,3 +64,13 @@ builder.Services.AddSingleton(new JudgeOrchestratorOptions(sandboxOptions.Image,
 builder.Services.AddSingleton<IJudgementOrchestrator, JudgementOrchestrator>(); builder.Services.AddHttpClient<IJudgeServerClient, JudgeServerClient>();
 builder.Services.AddHostedService<JudgeWorkerService>();
 await builder.Build().RunAsync();
+
+static bool ProbeWorkspace(string root)
+{
+    try
+    {
+        Directory.CreateDirectory(root); var probe = Path.Combine(root, $".probe-{Guid.NewGuid():N}");
+        File.WriteAllBytes(probe, []); File.Delete(probe); return true;
+    }
+    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return false; }
+}

@@ -7,6 +7,9 @@
 - `src/Infrastructure/Persistence`: aggregate persistence, focused identity and scope administration, auditing, durable queue, migrations, and concurrent outbox delivery.
 - `src/Infrastructure/Storage`: hash-addressed source writes and bounded orphan reconciliation.
 - `src/Server`: composition root plus feature-grouped authentication, administration, evidence, examination, and worker endpoints; resource authorization and realtime routing are separate subsystems.
+- `src/Contracts`: versioned process-boundary judge and worker contracts without server implementation details.
+- `src/Judge`: standalone authenticated worker, safe workspace lifecycle, C++ and C# adapters, output checkers, and deterministic judgement orchestration.
+- `src/Sandbox`: independently testable fail-closed Podman isolation contracts, capability probe, and Linux backend.
 - `tests`: behavior tests at domain, application, and HTTP boundaries.
 - `deploy/compose`: opt-in local PostgreSQL.
 
@@ -19,6 +22,8 @@ An operator creates and opens an examination, creates a room, and registers cand
 When PostgreSQL is configured, a scoped `PostgresRuntime` rehydrates framework-free aggregates and synchronizes tracked rows inside one EF transaction. The third stored confirmed evaluation creates its warning, terminates the session, freezes the current source revision, creates one final submission and job, terminates examination access, appends audit/outbox rows, and commits once. Database unique constraints and an optimistic session token protect retries and competing instances.
 
 Queue claims use `FOR UPDATE SKIP LOCKED`; leases bind a worker, job, unpredictable lease identifier, and expiry. Completion checks all four and is idempotent for an already completed job owned by the same worker. Expired leases are eligible for recovery while attempts remain.
+
+Leased workers download only generated source and test objects for their job. The worker compiles outside the API process, but candidate execution always passes through the Podman sandbox. Results persist bounded metadata and create the existing judgement outbox notifications in the same database save. See `judge-worker.md` and `judgement-pipeline.md`.
 
 Outbox messages contain a versioned type, JSON contract, occurrence time, retry state, and stable identifier. Each dispatcher holds a PostgreSQL `FOR UPDATE SKIP LOCKED` claim through publication and marks success only after SignalR returns. A crash between publication and commit can redeliver, so delivery is at-least-once and `RealtimeEnvelope.MessageId` is the client deduplication key. Failures use bounded exponential backoff and the tenth failure marks the row poison. Group entry is authorized independently for examination, room, enabled candidate, assigned chief, and bound worker scopes.
 

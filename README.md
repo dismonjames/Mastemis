@@ -1,6 +1,6 @@
 # Mastemis
 
-Mastemis is an open-source, self-hosted programming examination and judging platform. This repository delivers a server-side examination vertical slice with PostgreSQL persistence, ASP.NET Core Identity, scoped authorization, durable judge leases, a transactional outbox, and SignalR delivery. Deployment data remains on infrastructure selected by the operator; the application contains no maintainer telemetry.
+Mastemis is an open-source, self-hosted programming examination and judging platform. This repository delivers a server-side examination vertical slice plus a separate fail-closed Linux judge worker with C++ and C# compilation, exact/token checking, PostgreSQL leases, transactional result reporting, and SignalR delivery. Deployment data remains on infrastructure selected by the operator; the application contains no maintainer telemetry.
 
 ## Build and test
 
@@ -42,6 +42,8 @@ Administrators issue worker credentials through `/api/admin/workers`. The return
 Judge claims use PostgreSQL row locks with `FOR UPDATE SKIP LOCKED`, unpredictable lease identifiers, expiry recovery, bounded attempts, and worker/lease validation. Outbox publication is at-least-once: state and versioned notification payloads commit together, dispatchers claim rows with `FOR UPDATE SKIP LOCKED`, poison repeated failures after ten attempts, and realtime envelopes contain a stable message identifier for client deduplication.
 
 Source objects are atomically renamed before their metadata transaction commits. A hosted reconciler scans a bounded batch of old generated objects, verifies references in PostgreSQL first, and removes only stale unreferenced objects. Configure `Storage__OrphanAgeMinutes`, `Storage__ReconciliationIntervalMinutes`, and `Storage__ReconciliationBatchSize`; recent objects and all referenced objects are retained.
+
+The API process never compiles or runs candidate code. Build the versioned Podman image and operate `src/Judge` on a dedicated Linux worker as described in [judge worker architecture](docs/architecture/judge-worker.md). The worker refuses jobs unless the configured image is already local and mandatory network, filesystem, privilege, memory, process, and cgroup controls pass. There is no unsandboxed fallback. Test inputs and expected outputs use generated objects beneath `Judge__DataPath`; problem-package authoring/import remains a later subsystem.
 
 ## Privacy
 
