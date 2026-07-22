@@ -37,8 +37,8 @@ public sealed class GenerationTests
     public void Impossible_unique_generation_is_bounded()
     {
         const string source = "test 1 { a = uniqueArray(3, int(1, 2)) input = a }";
-        var error = Assert.Throws<MasRuntimeException>(() => new MasRuntime(new()).Generate(source, 1, TestContext.Current.CancellationToken));
-        Assert.Equal("mas.runtime.unique_impossible", error.Code);
+        var result = new MasRuntime(new()).Generate(source, 1, TestContext.Current.CancellationToken);
+        Assert.Empty(result.Tests); Assert.Contains(result.Diagnostics, x => x.Code == "mas.semantic.unique_infeasible");
     }
 
     [Fact]
