@@ -19,6 +19,12 @@ public static class ProblemPackageEndpoints
             if (!request.Headers.TryGetValue("Idempotency-Key", out var key)) return Results.BadRequest();
             return Results.Ok(await packages.ReplaceDraftAsync(problemId, expectedVersion, request.Body, key.ToString(), ct));
         });
+        group.MapGet("/packages/imports/{importId:guid}", async (Guid importId,
+            IProblemPackageService packages, CancellationToken ct) =>
+            Results.Ok(await packages.GetImportAsync(importId, ct)));
+        group.MapGet("/drafts/{problemId:guid}/packages/imports", async (Guid problemId,
+            IProblemPackageService packages, CancellationToken ct) =>
+            Results.Ok(await packages.ListImportsAsync(problemId, ct)));
         group.MapPost("/drafts/{problemId:guid}/packages/export", async (Guid problemId, HttpRequest request,
             IProblemPackageService packages, CancellationToken ct) =>
         {

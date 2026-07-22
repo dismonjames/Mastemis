@@ -6,6 +6,8 @@ public sealed record ProblemPackageExport(Guid ExportId, Stream Content, string 
     DateTimeOffset CreatedAtUtc, DateTimeOffset ExpiresAtUtc);
 public sealed record ProblemPackageValidation(string PackageSha256, IReadOnlyList<PackageDiagnostic> Diagnostics);
 public sealed record ProblemPackageImport(Guid ImportId, Guid ProblemId, string PackageSha256, string Mode);
+public sealed record ProblemPackageImportMetadata(Guid ImportId, Guid ProblemId, string PackageSha256, string Mode,
+    string Status, DateTimeOffset CreatedAtUtc, IReadOnlyList<PackageDiagnostic> Diagnostics);
 public sealed record ProblemPackageExportMetadata(Guid ExportId, Guid ProblemId, int ProblemVersion, bool IncludeHidden,
     string FormatVersion, string Sha256, long Length, DateTimeOffset CreatedAtUtc, DateTimeOffset ExpiresAtUtc,
     string Status, string? FailureCode);
@@ -20,4 +22,6 @@ public interface IProblemPackageService
     Task<ProblemPackageImport> CreateNewAsync(Stream package, string idempotencyKey, CancellationToken cancellationToken);
     Task<ProblemPackageImport> ReplaceDraftAsync(Guid problemId, int expectedVersion, Stream package,
         string idempotencyKey, CancellationToken cancellationToken);
+    Task<ProblemPackageImportMetadata> GetImportAsync(Guid importId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ProblemPackageImportMetadata>> ListImportsAsync(Guid problemId, CancellationToken cancellationToken);
 }

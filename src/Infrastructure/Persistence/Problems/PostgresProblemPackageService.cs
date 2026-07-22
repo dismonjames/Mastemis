@@ -124,6 +124,22 @@ public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblem
         string idempotencyKey, CancellationToken cancellationToken) =>
         replacer.ReplaceAsync(problemId, expectedVersion, package, idempotencyKey, cancellationToken);
 
+    public async Task<ProblemPackageImportMetadata> GetImportAsync(Guid importId, CancellationToken cancellationToken)
+    {
+        var row = await db.ProblemPackageImports.AsNoTracking().SingleOrDefaultAsync(x => x.Id == importId, cancellationToken)
+            ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Package import not found.");
+        await authorization.EnsureAsync("problem.read", row.ProblemId, cancellationToken);
+        return MapImport(row);
+    }
+
+    public async Task<IReadOnlyList<ProblemPackageImportMetadata>> ListImportsAsync(Guid problemId, CancellationToken cancellationToken)
+    {
+        await authorization.EnsureAsync("problem.read", problemId, cancellationToken);
+        var rows = await db.ProblemPackageImports.AsNoTracking().Where(x => x.ProblemId == problemId)
+            .OrderByDescending(x => x.CreatedAtUtc).Take(100).ToArrayAsync(cancellationToken);
+        return rows.Select(MapImport).ToArray();
+    }
+
     public async Task<IReadOnlyList<ProblemPackageExportMetadata>> ListExportsAsync(Guid problemId, CancellationToken cancellationToken)
     {
         await authorization.EnsureAsync("problem.hidden", problemId, cancellationToken);
@@ -163,4 +179,7 @@ public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblem
 
     private async Task<byte[]> ReadAsync(string objectId, long length, CancellationToken cancellationToken)
     { await using var stream = await objects.OpenReadAsync(objectId, length, cancellationToken); using var output = new MemoryStream(); await stream.CopyToAsync(output, cancellationToken); return output.ToArray(); }
+
+    private static ProblemPackageImportMetadata MapImport(ProblemPackageImportRow row) =>
+        new(row.Id, row.ProblemId, row.PackageSha256, row.Mode, "Completed", row.CreatedAtUtc, []);
 }
