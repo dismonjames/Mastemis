@@ -11,6 +11,7 @@ public interface IApiTransport
     Task<TResponse?> SendAsync<TRequest, TResponse>(HttpMethod method, string path, TRequest body, string? idempotencyKey, CancellationToken cancellationToken);
     Task SendAsync<TRequest>(HttpMethod method, string path, TRequest body, string? idempotencyKey, CancellationToken cancellationToken);
     Task<Stream> DownloadAsync(string path, CancellationToken cancellationToken);
+    Task<TResponse?> UploadAsync<TResponse>(HttpMethod method, string path, Stream content, string contentType, string? idempotencyKey, CancellationToken cancellationToken);
 }
 
 public sealed class ApiTransport(HttpClient client, ClientSession session) : IApiTransport
@@ -48,6 +49,19 @@ public sealed class ApiTransport(HttpClient client, ClientSession session) : IAp
         catch { response.Dispose(); throw; }
     }
 
+    public async Task<TResponse?> UploadAsync<TResponse>(HttpMethod method, string path, Stream content, string contentType, string? idempotencyKey, CancellationToken cancellationToken)
+    {
+        await EnsureAntiforgeryAsync(cancellationToken).ConfigureAwait(false);
+        using var request = CreateRequest(method, path);
+        request.Content = new StreamContent(content);
+        request.Content.Headers.ContentType = new(contentType);
+        request.Headers.TryAddWithoutValidation("X-CSRF-TOKEN", antiforgeryToken);
+        if (!string.IsNullOrWhiteSpace(idempotencyKey)) request.Headers.TryAddWithoutValidation("Idempotency-Key", idempotencyKey);
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken).ConfigureAwait(false);
+    }
+
     private async Task<HttpResponseMessage> SendCoreAsync<T>(HttpMethod method, string path, T body, string? idempotencyKey, CancellationToken cancellationToken)
     {
         await EnsureAntiforgeryAsync(cancellationToken).ConfigureAwait(false);
@@ -73,9 +87,10 @@ public sealed class ApiTransport(HttpClient client, ClientSession session) : IAp
     private HttpRequestMessage CreateRequest(HttpMethod method, string path)
         => new(method, new Uri(session.ServerBaseUri ?? throw new InvalidOperationException("No Mastemis server is selected."), path));
 
-    private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode) return;
+        if (response.StatusCode == HttpStatusCode.Unauthorized) session.SignOut();
         ApiProblem problem;
         try
         {

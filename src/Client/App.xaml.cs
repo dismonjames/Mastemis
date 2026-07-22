@@ -52,6 +52,7 @@ public sealed partial class App : Application
         services.AddSingleton<IProblemDraftClient, ProblemDraftClient>();
         services.AddSingleton<IProblemMasClient, ProblemMasClient>();
         services.AddSingleton<IProblemGenerationClient, ProblemGenerationClient>();
+        services.AddSingleton<IProblemPackageClient, ProblemPackageClient>();
         services.AddSingleton<ICandidateSessionClient, CandidateSessionClient>();
         services.AddSingleton<IClientPreferenceStore, UnoClientPreferenceStore>();
         services.AddSingleton<ConnectionViewModel>();
