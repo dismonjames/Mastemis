@@ -7,6 +7,7 @@ public sealed class SignalROutboxPublisher(IHubContext<ExamHub> hub, IServiceSco
 {
     public async Task PublishAsync(string messageId, string messageType, string payload, CancellationToken cancellationToken)
     {
+        if (!RealtimeContractCatalog.IsSupported(messageType)) throw new InvalidDataException("Unsupported realtime contract type.");
         var envelope = new RealtimeEnvelope(messageId, 1, messageType, clock.UtcNow, payload);
         await using var scope = scopeFactory.CreateAsyncScope();
         var targets = await scope.ServiceProvider.GetRequiredService<RealtimeRouteResolver>().ResolveAsync(payload, cancellationToken);

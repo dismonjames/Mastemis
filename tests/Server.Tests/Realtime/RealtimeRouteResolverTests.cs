@@ -10,6 +10,9 @@ namespace Mastemis.Server.Tests.Realtime;
 public sealed class RealtimeRouteResolverTests
 {
     [Fact]
+    public void Unknown_realtime_contract_is_rejected() => Assert.False(RealtimeContractCatalog.IsSupported("unknown.contract"));
+
+    [Fact]
     public async Task Warning_and_termination_route_to_candidate_room_exam_and_chief()
     {
         await using var db = CreateContext(); var session = SeedSession(db); await db.SaveChangesAsync(TestContext.Current.CancellationToken);

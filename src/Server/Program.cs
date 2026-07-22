@@ -58,7 +58,7 @@ if (durableMode)
         options.Password.RequireLowercase = true; options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = true; options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); options.User.RequireUniqueEmail = false;
-    }).AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<MastemisDbContext>().AddSignInManager();
+    }).AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<MastemisDbContext>().AddDefaultTokenProviders().AddSignInManager();
     var authentication = builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;

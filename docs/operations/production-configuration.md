@@ -4,6 +4,7 @@ Required settings are supplied through environment variables or a secret provide
 
 - `ConnectionStrings__Mastemis`: PostgreSQL connection string.
 - `Storage__Path`: operator-controlled source-object root, not writable by untrusted users.
+- `Storage__OrphanAgeMinutes`, `Storage__ReconciliationIntervalMinutes`, and `Storage__ReconciliationBatchSize`: bounded source-object cleanup controls.
 - `Database__ApplyMigrations`: defaults to `true`; set `false` when migrations are deployed separately.
 - `Identity__SessionMinutes`: cookie duration from 5 through 720 minutes.
 - `Bootstrap__Administrator__Username` and `Bootstrap__Administrator__Password`: optional first-run values; neither has a default.
