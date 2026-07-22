@@ -1,0 +1,11 @@
+<Page x:Class="Mastemis.Client.Pages.Workers.WorkersPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="using:Mastemis.Client.Controls">
+    <ScrollViewer><StackPanel Padding="{StaticResource MastemisPageMargin}" Spacing="18" MaxWidth="1280">
+        <controls:PageHeader Eyebrow="JUDGE OPERATIONS" Title="Workers" Subtitle="Sandboxed execution capacity and worker readiness."/>
+        <InfoBar IsOpen="True" Severity="Informational" IsClosable="False" Title="Worker inventory endpoint unavailable" Message="This server supports authenticated heartbeat and leased job execution, but it does not expose an authorized worker-list query. Mastemis will not infer or fabricate worker rows."/>
+        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><controls:MetricTile Label="Active workers" Value="—" Detail="No aggregate endpoint" Glyph="&#xE950;"/><controls:MetricTile Grid.Column="1" Label="Shared capacity" Value="—" Detail="Heartbeat reporting only" Glyph="&#xE9D9;"/><controls:MetricTile Grid.Column="2" Label="Sandbox readiness" Value="Unknown" Detail="Probe individual workers" Glyph="&#xE7BA;"/></Grid>
+        <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8"><StackPanel><TextBlock Padding="16,12" Text="Worker inventory" Style="{StaticResource MastemisSectionTitleStyle}"/><controls:EmptyState Title="No authorized inventory query" Message="Credentials, secrets, source paths, and hidden test paths are never exposed here. Use System health for server-side queue and readiness checks." Glyph="&#xE770;"/></StackPanel></Border>
+    </StackPanel></ScrollViewer>
+</Page>
