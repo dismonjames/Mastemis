@@ -14,13 +14,15 @@ using Mastemis.Mas.Packaging.Security;
 using Mastemis.Mas.Packaging.Validation;
 using Mastemis.Mas.Packaging.Versions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Mastemis.Infrastructure.Persistence.Problems;
 
 public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblemObjectStorage objects, IClock clock,
     IAdministrationActor actor,
     IAuthorizationService authorization, PostgresProblemPackageImporter importer,
-    PostgresProblemPackageReplacer replacer, ProblemExportOptions exportOptions) : IProblemPackageService
+    PostgresProblemPackageReplacer replacer, ProblemExportOptions exportOptions,
+    ILogger<PostgresProblemPackageService> logger) : IProblemPackageService
 {
     private static readonly PackageArchiveLimits Limits = new();
     public async Task<ProblemPackageValidation> ValidateAsync(Stream package, CancellationToken cancellationToken)
@@ -102,19 +104,39 @@ public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblem
             Length = staged.Length,
             CreatedAtUtc = clock.UtcNow,
             ExpiresAtUtc = clock.UtcNow + exportOptions.Retention,
-            Status = "Ready",
+            Status = "Staged",
             IdempotencyKey = idempotencyKey
         };
+        var auditPersisted = false;
         try
         {
             db.ProblemPackageExports.Add(exportRow);
+            await db.SaveChangesAsync(cancellationToken);
+            auditPersisted = true;
+            await objects.MarkReferencedAsync(staged.ObjectId, cancellationToken);
+            exportRow.Status = "Ready";
             db.OutboxMessages.Add(ProblemOutbox.Create("PackageExported", problemId, clock.UtcNow,
                 new { problemId, exportId = exportRow.Id, packageSha256 = exportRow.PackageSha256, length = exportRow.Length }));
             await db.SaveChangesAsync(cancellationToken);
-            await objects.MarkReferencedAsync(staged.ObjectId, cancellationToken);
             return await OpenRowAsync(exportRow, cancellationToken);
         }
-        catch { await objects.DeleteStagedAsync(staged.ObjectId, CancellationToken.None); throw; }
+        catch
+        {
+            if (!auditPersisted)
+                await objects.DeleteStagedAsync(staged.ObjectId, CancellationToken.None);
+            else
+            {
+                exportRow.Status = "Failed";
+                exportRow.FailureCode = "problem.export.storage_failure";
+                exportRow.ExpiresAtUtc = clock.UtcNow;
+                try { await db.SaveChangesAsync(CancellationToken.None); }
+                catch (DbUpdateException)
+                {
+                    logger.LogWarning("Package export failure status could not be persisted for export {ExportId}.", exportRow.Id);
+                }
+            }
+            throw;
+        }
     }
 
     public Task<ProblemPackageImport> CreateNewAsync(Stream package, string idempotencyKey, CancellationToken cancellationToken) =>
