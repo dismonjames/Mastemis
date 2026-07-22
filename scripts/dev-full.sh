@@ -186,8 +186,34 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-printf '[1/6] Starting PostgreSQL...\n'
+printf '[1/6] Starting PostgreSQL and waiting for health...\n'
 "${compose[@]}" -f "$compose_file" up -d postgres
+
+postgres_ready=false
+for _ in $(seq 1 90); do
+  if "${compose[@]}" -f "$compose_file" exec -T postgres \
+      pg_isready -U mastemis -d mastemis >/dev/null 2>&1; then
+    if (exec 3<>"/dev/tcp/127.0.0.1/5432") 2>/dev/null; then
+      postgres_ready=true
+      break
+    fi
+  fi
+  if "${compose[@]}" -f "$compose_file" ps --status exited --services 2>/dev/null | grep -qx 'postgres'; then
+    break
+  fi
+  sleep 1
+done
+
+if ! $postgres_ready; then
+  printf '%s\n' 'PostgreSQL did not become reachable on 127.0.0.1:5432.' >&2
+  printf '%s\n' 'Compose status:' >&2
+  "${compose[@]}" -f "$compose_file" ps >&2 || true
+  printf '%s\n' 'PostgreSQL logs:' >&2
+  "${compose[@]}" -f "$compose_file" logs --tail 120 postgres >&2 || true
+  printf '%s\n' 'If this is an old or incompatible data directory, rerun with --reset.' >&2
+  exit 9
+fi
+printf 'PostgreSQL is accepting connections on 127.0.0.1:5432.\n'
 
 printf '[2/6] Restoring and building Mastemis...\n'
 dotnet restore "$repo_root/Mastemis.sln" --nologo
