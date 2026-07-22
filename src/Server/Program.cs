@@ -139,6 +139,8 @@ if (durableMode)
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddScoped<IProblemMasStore, PostgresProblemMasStore>();
     builder.Services.AddScoped<ProblemMasService>();
+    builder.Services.AddScoped<IProblemGenerationQueryStore, PostgresProblemGenerationQueryStore>();
+    builder.Services.AddScoped<ProblemGenerationQueryService>();
     builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
     builder.Services.AddScoped<ProblemStatementService>();
     builder.Services.AddScoped<IProblemAssetStore, PostgresProblemAssetStore>();

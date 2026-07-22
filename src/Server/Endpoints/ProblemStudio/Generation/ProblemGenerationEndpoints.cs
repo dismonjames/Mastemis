@@ -18,6 +18,14 @@ public static class ProblemGenerationEndpoints
             var operation = await service.GetStatusAsync(operationId, new(problemId), ct);
             return operation is null ? Results.NotFound() : Results.Ok(operation);
         });
+        group.MapGet("/drafts/{problemId:guid}/generation/{operationId:guid}/progress",
+            async (Guid problemId, Guid operationId, ProblemGenerationQueryService service, CancellationToken ct) =>
+                Results.Ok(await service.GetProgressAsync(new(problemId), operationId, ct)));
+        group.MapGet("/drafts/{problemId:guid}/generation/{operationId:guid}/diagnostics",
+            async (Guid problemId, Guid operationId, int? offset, int? limit,
+                ProblemGenerationQueryService service, CancellationToken ct) =>
+                Results.Ok(await service.GetDiagnosticsAsync(
+                    new(problemId), operationId, offset ?? 0, limit ?? 50, ct)));
         group.MapDelete("/drafts/{problemId:guid}/generation/{operationId:guid}", async (Guid problemId, Guid operationId,
             ProblemStudioService service, CancellationToken ct) =>
         { await service.CancelAsync(operationId, new(problemId), ct); return Results.Accepted(); });
