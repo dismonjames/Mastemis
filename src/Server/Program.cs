@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Threading.RateLimiting;
 using Mastemis.Application;
 using Mastemis.Application.Administration;
+using Mastemis.Application.Dashboard;
 using Mastemis.Application.Evidence;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
@@ -21,6 +22,7 @@ using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
 using Mastemis.Infrastructure.Persistence.Outbox;
 using Mastemis.Infrastructure.Persistence.Problems;
+using Mastemis.Infrastructure.Persistence.Queries;
 using Mastemis.Infrastructure.Persistence.Queue;
 using Mastemis.Infrastructure.Storage.ProblemObjects;
 using Mastemis.Infrastructure.Storage.ProblemObjects.Exports;
@@ -32,6 +34,7 @@ using Mastemis.Server.Endpoints.Auth;
 using Mastemis.Server.Endpoints.Evidence;
 using Mastemis.Server.Endpoints.Examinations;
 using Mastemis.Server.Endpoints.ProblemStudio;
+using Mastemis.Server.Endpoints.Queries;
 using Mastemis.Server.Endpoints.Workers;
 using Mastemis.Server.Realtime;
 using Microsoft.AspNetCore.Diagnostics;
@@ -113,6 +116,8 @@ if (durableMode)
     builder.Services.AddScoped<WorkerCredentialService>();
     builder.Services.AddScoped<IWorkerCredentialService>(sp => sp.GetRequiredService<WorkerCredentialService>());
     builder.Services.AddScoped<IHumanIdentityAdministration, HumanIdentityAdministration>();
+    builder.Services.AddScoped<IDashboardQueryStore, PostgresDashboardQueryStore>();
+    builder.Services.AddScoped<DashboardQueryService>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();
     builder.Services.AddScoped<IAdministrationActor, HttpAdministrationActor>();
     builder.Services.AddScoped<IEvidenceMetadataAccess, EvidenceMetadataAccess>();
@@ -227,7 +232,7 @@ app.MapGet("/api/system/version", () => Results.Ok(new
     version = typeof(Program).Assembly.GetName().Version?.ToString() ?? "0.0.0",
     telemetry = "none"
 }));
-if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); app.MapEvidenceEndpoints(); app.MapProblemStudioEndpoints(); }
+if (durableMode) { app.MapAuthenticationEndpoints(); app.MapAdministrationEndpoints(); app.MapEvidenceEndpoints(); app.MapProblemStudioEndpoints(); app.MapOperationalQueryEndpoints(); }
 app.MapExaminationEndpoints(durableMode);
 if (durableMode) app.MapWorkerEndpoints();
 app.MapHub<ExamHub>("/hubs/exam");
