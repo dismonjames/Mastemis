@@ -1,5 +1,14 @@
 # Mastemis client architecture
 
+## Authorship and license
+
+Mastemis is authored by **Lê Hùng Quang Minh** and distributed under the
+Mozilla Public License 2.0 (`MPL-2.0`). The root `LICENSE`, `NOTICE`, central
+build metadata, and repository REUSE annotation define the covered source.
+Third-party dependencies retain their upstream licenses. The authenticated
+client exposes the same author, version, copyright, and license information
+through its About page.
+
 The Mastemis client is a shared Uno Platform application. `Mastemis.Client.Core` contains platform-neutral MVVM state, typed HTTP clients, session state, navigation policy, validation, and the SignalR client. `Mastemis.Client` contains WinUI-compatible XAML, platform startup, resource dictionaries, and local preference storage. Views never call `HttpClient` directly.
 
 The default build targets Skia Desktop. The same project contains the WebAssembly head; set `MastemisBuildWebAssembly=true` after installing the .NET `wasm-tools` workload. No client telemetry is enabled.

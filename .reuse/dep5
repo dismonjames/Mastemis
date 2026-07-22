@@ -1,0 +1,15 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Mastemis
+Source: local repository
+
+Files: src/* tests/* scripts/* deploy/* docs/* *.sln *.props *.targets *.md .editorconfig .gitignore
+Copyright: 2026 Lê Hùng Quang Minh
+License: MPL-2.0
+ This repository distributes Mastemis-authored Source Code Form under the
+ Mozilla Public License, version 2.0. The complete license text is available
+ in the top-level LICENSE file.
+
+Files: LICENSE
+Copyright: Mozilla Foundation and contributors
+License: MPL-2.0
+ The LICENSE file contains the unmodified Mozilla Public License 2.0 text.
