@@ -1,7 +1,7 @@
 namespace Mastemis.Contracts.Judge;
 
 public sealed record CompilationRequest(
-    IReadOnlyList<SourceFile> Sources,
+    IReadOnlyList<string> SourcePaths,
     string SourceDirectory,
     string BuildDirectory,
     ResourceLimits Limits);
