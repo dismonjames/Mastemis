@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Domain/Mastemis.Domain.csproj" />
+    <Project Path="src/Application/Mastemis.Application.csproj" />
+    <Project Path="src/Infrastructure/Mastemis.Infrastructure.csproj" />
+    <Project Path="src/Server/Mastemis.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Domain.Tests/Mastemis.Domain.Tests.csproj" />
+    <Project Path="tests/Application.Tests/Mastemis.Application.Tests.csproj" />
+    <Project Path="tests/Server.Tests/Mastemis.Server.Tests.csproj" />
+    <Project Path="tests/Infrastructure.Tests/Mastemis.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

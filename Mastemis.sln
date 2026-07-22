@@ -1,0 +1,61 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Domain", "src\Domain\Mastemis.Domain.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Application", "src\Application\Mastemis.Application.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Infrastructure", "src\Infrastructure\Mastemis.Infrastructure.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A03}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Server", "src\Server\Mastemis.Server.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Domain.Tests", "tests\Domain.Tests\Mastemis.Domain.Tests.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Application.Tests", "tests\Application.Tests\Mastemis.Application.Tests.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Server.Tests", "tests\Server.Tests\Mastemis.Server.Tests.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mastemis.Infrastructure.Tests", "tests\Infrastructure.Tests\Mastemis.Infrastructure.Tests.csproj", "{AA1A6FD2-CF55-44E4-A21C-F155E8497A08}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A03}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA1A6FD2-CF55-44E4-A21C-F155E8497A08}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
