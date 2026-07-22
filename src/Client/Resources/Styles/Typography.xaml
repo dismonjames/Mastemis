@@ -1,0 +1,14 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="MastemisPageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="MastemisSectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="18"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="MastemisMutedTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource MastemisMutedTextBrush}"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="MastemisCodeTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,monospace"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+</ResourceDictionary>
