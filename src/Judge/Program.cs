@@ -6,6 +6,7 @@ using Mastemis.Judge.Languages;
 using Mastemis.Judge.Languages.Cpp;
 using Mastemis.Judge.Languages.CSharp;
 using Mastemis.Judge.Worker;
+using Mastemis.Judge.Worker.ReferenceOutputs;
 using Mastemis.Judge.Workspaces;
 using Mastemis.Sandbox.Abstractions;
 using Mastemis.Sandbox.Linux;
@@ -62,7 +63,10 @@ builder.Services.AddSingleton<ILanguageAdapter, CppLanguageAdapter>(); builder.S
 builder.Services.AddSingleton<IOutputChecker, ExactOutputChecker>(); builder.Services.AddSingleton<IOutputChecker, TokenOutputChecker>();
 builder.Services.AddSingleton(new JudgeOrchestratorOptions(sandboxOptions.Image, TimeSpan.FromMinutes(30), 64 * 1024 * 1024, "mastemis-judge/0.1"));
 builder.Services.AddSingleton<IJudgementOrchestrator, JudgementOrchestrator>(); builder.Services.AddHttpClient<IJudgeServerClient, JudgeServerClient>();
+builder.Services.AddHttpClient<IReferenceOutputServerClient, ReferenceOutputServerClient>();
+builder.Services.AddSingleton<ReferenceOutputExecutor>();
 builder.Services.AddHostedService<JudgeWorkerService>();
+builder.Services.AddHostedService<ReferenceOutputWorkerService>();
 await builder.Build().RunAsync();
 
 static bool ProbeWorkspace(string root)

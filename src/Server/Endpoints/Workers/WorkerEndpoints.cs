@@ -69,11 +69,13 @@ public static class WorkerEndpoints
             IReferenceOutputQueue queue, CancellationToken ct) =>
         { await queue.StartAsync(CurrentWorker(principal), jobId, request.LeaseToken, ct); return Results.NoContent(); });
         workers.MapPost("/reference-jobs/{jobId:guid}/tests/{testIndex:int}/output", async (Guid jobId, int testIndex,
-            ClaimsPrincipal principal, ReferenceOutputUploadRequest request, HttpRequest http, ReferenceOutputIngestionService ingestion, CancellationToken ct) =>
+            Guid operationId, Guid leaseToken, int contractVersion, string sha256, long length, long executionMilliseconds,
+            long? peakMemoryBytes, string sandboxBackend, string judgeVersion, ClaimsPrincipal principal, HttpRequest http,
+            ReferenceOutputIngestionService ingestion, CancellationToken ct) =>
         {
-            await ingestion.IngestAsync(CurrentWorker(principal), jobId, new(request.OperationId, request.LeaseToken, request.ContractVersion,
-            testIndex, request.Sha256, request.Length, request.ExecutionMilliseconds, request.PeakMemoryBytes, request.SandboxBackend,
-            request.JudgeVersion, request.Status, request.FailureCode), http.Body, ct); return Results.NoContent();
+            await ingestion.IngestAsync(CurrentWorker(principal), jobId, new(operationId, leaseToken, contractVersion,
+            testIndex, sha256, length, executionMilliseconds, peakMemoryBytes, sandboxBackend,
+            judgeVersion, ReferenceOutputResultStatus.Completed, null), http.Body, ct); return Results.NoContent();
         });
         workers.MapPost("/reference-jobs/{jobId:guid}/complete", async (Guid jobId, ClaimsPrincipal principal, ReferenceOutputCompletionRequest request,
             IReferenceOutputQueue queue, IProblemTestSetPublisher publisher, CancellationToken ct) =>
@@ -106,8 +108,5 @@ public sealed record RotateWorkerRequest(DateTimeOffset? ExpiresAtUtc);
 public sealed record ClaimJobRequest(int LeaseSeconds);
 public sealed record LeaseRequest(Guid LeaseId, int LeaseSeconds);
 public sealed record ReferenceLeaseRequest(Guid LeaseToken, int LeaseSeconds);
-public sealed record ReferenceOutputUploadRequest(Guid OperationId, Guid LeaseToken, int ContractVersion, string Sha256,
-    long Length, long ExecutionMilliseconds, long? PeakMemoryBytes, string SandboxBackend, string JudgeVersion,
-    ReferenceOutputResultStatus Status, string? FailureCode);
 public sealed record ReferenceOutputCompletionRequest(Guid OperationId, Guid LeaseToken, int CompletedTests, string JudgeVersion, string SandboxBackend);
 public sealed record ReferenceOutputFailureRequest(Guid OperationId, Guid LeaseToken, string FailureCode, string? DiagnosticSummary);
