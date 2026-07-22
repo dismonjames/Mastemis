@@ -12,6 +12,13 @@ public sealed class RealtimeRouteResolverTests
     [Fact]
     public void Unknown_realtime_contract_is_rejected() => Assert.False(RealtimeContractCatalog.IsSupported("unknown.contract"));
 
+    [Theory]
+    [InlineData("GenerationStarted")]
+    [InlineData("ReferenceOutputTestCompleted")]
+    [InlineData("GeneratedTestSetPublished")]
+    [InlineData("PackageImported")]
+    public void Problem_studio_contracts_are_supported(string contract) => Assert.True(RealtimeContractCatalog.IsSupported(contract));
+
     [Fact]
     public async Task Warning_and_termination_route_to_candidate_room_exam_and_chief()
     {
