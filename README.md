@@ -45,7 +45,7 @@ Source objects are atomically renamed before their metadata transaction commits.
 
 The API process never compiles or runs candidate code. Build the versioned Podman image and operate `src/Judge` on a dedicated Linux worker as described in [judge worker architecture](docs/architecture/judge-worker.md). The worker refuses jobs unless the configured image is already local and mandatory network, filesystem, privilege, memory, process, and cgroup controls pass. There is no unsandboxed fallback.
 
-Durable Problem Studio support includes PostgreSQL drafts, MAS source and generation operations, staged test-input object storage, deterministic input publication, and authenticated endpoints under `/api/problem-studio`. Reference-output jobs, persisted package import/export, author assignment, and hidden-test retrieval are not complete; input-only generated sets are not complete judge data for checkers requiring expected output. See [problem authoring](docs/architecture/problem-authoring.md).
+Durable Problem Studio support includes scoped authors, localized statements, bounded assets, reference-solution revisions, deterministic MAS input staging, a leased reference-output worker queue, verified expected-output ingestion, complete atomic publication, hidden-test authorization, CreateNew `.mas` import, deterministic stored export, realtime progress, and hosted object reconciliation. ReplaceDraft import, export audit persistence, and live PostgreSQL/Podman verification remain incomplete. See [problem authoring](docs/architecture/problem-authoring.md) and [test generation](docs/architecture/test-generation.md).
 
 ## Privacy
 
