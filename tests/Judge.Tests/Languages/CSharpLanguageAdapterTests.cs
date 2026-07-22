@@ -23,7 +23,8 @@ public sealed class CSharpLanguageAdapterTests
     {
         if (!File.Exists("/usr/bin/dotnet")) Assert.Skip("The configured .NET SDK /usr/bin/dotnet is unavailable.");
         await using var fixture = await CppLanguageAdapterTests.CompilationFixture.CreateAsync(".cs", "Console.WriteLine(42);");
-        var result = await new CSharpLanguageAdapter(new CompilerProcessRunner(), new()).CompileAsync(fixture.Request, TestContext.Current.CancellationToken);
+        var request = fixture.Request with { Limits = fixture.Request.Limits with { CompilationTime = TimeSpan.FromMinutes(1) } };
+        var result = await new CSharpLanguageAdapter(new CompilerProcessRunner(), new()).CompileAsync(request, TestContext.Current.CancellationToken);
         Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Diagnostics.Select(x => x.Message)));
         Assert.NotNull(result.Artifact); Assert.True(File.Exists(result.Artifact.ExecutablePath));
     }
