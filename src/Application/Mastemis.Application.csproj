@@ -1,3 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><ProjectReference Include="../Domain/Mastemis.Domain.csproj" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Domain/Mastemis.Domain.csproj" />
+    <ProjectReference Include="../Mas.Language/Mastemis.Mas.Language.csproj" />
+    <ProjectReference Include="../Mas.Runtime/Mastemis.Mas.Runtime.csproj" />
+    <ProjectReference Include="../Mas.Packaging/Mastemis.Mas.Packaging.csproj" />
+  </ItemGroup>
 </Project>
