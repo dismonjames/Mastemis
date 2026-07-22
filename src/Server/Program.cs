@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Mastemis.Application;
 using Mastemis.Application.Administration;
 using Mastemis.Application.Dashboard;
+using Mastemis.Application.Examinations.Queries;
 using Mastemis.Application.Evidence;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
@@ -118,6 +119,8 @@ if (durableMode)
     builder.Services.AddScoped<IHumanIdentityAdministration, HumanIdentityAdministration>();
     builder.Services.AddScoped<IDashboardQueryStore, PostgresDashboardQueryStore>();
     builder.Services.AddScoped<DashboardQueryService>();
+    builder.Services.AddScoped<IExaminationQueryStore, PostgresExaminationQueryStore>();
+    builder.Services.AddScoped<ExaminationQueryService>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();
     builder.Services.AddScoped<IAdministrationActor, HttpAdministrationActor>();
     builder.Services.AddScoped<IEvidenceMetadataAccess, EvidenceMetadataAccess>();

@@ -6,5 +6,6 @@ public static class OperationalQueryEndpoints
     {
         var group = app.MapGroup("/api/queries").RequireAuthorization();
         group.MapDashboardQueryEndpoints();
+        group.MapExaminationQueryEndpoints();
     }
 }
