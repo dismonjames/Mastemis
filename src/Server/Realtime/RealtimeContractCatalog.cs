@@ -4,6 +4,16 @@ namespace Mastemis.Server.Realtime;
 
 public static class RealtimeContractCatalog
 {
+    private static readonly HashSet<string> ProblemStudioContracts = new(StringComparer.Ordinal)
+    {
+        "ProblemDraftCreated", "ProblemDraftUpdated", "ProblemStatementUpdated", "ProblemAssetUpdated",
+        "MasSourceUpdated", "MasValidationCompleted", "GenerationStarted", "GenerationProgressed",
+        "GenerationWaitingForReferenceOutputs", "ReferenceOutputJobQueued", "ReferenceOutputJobClaimed",
+        "ReferenceOutputTestCompleted", "ReferenceOutputCompleted", "ReferenceOutputJobFailed",
+        "GenerationPublishing", "GeneratedTestSetPublished", "GenerationFailed", "GenerationCancelled",
+        "PackageImportStarted", "PackageImported", "PackageImportFailed", "PackageExported"
+    };
+
     public static bool IsSupported(string type) => type == typeof(CandidateConnected).FullName ||
         type == typeof(CandidateDisconnected).FullName || type == typeof(DraftSaved).FullName ||
         type == typeof(SubmissionCreated).FullName || type == typeof(JudgementUpdated).FullName ||
@@ -11,5 +21,6 @@ public static class RealtimeContractCatalog
         type == typeof(WarningIssued).FullName || type == typeof(SessionTerminated).FullName ||
         type == typeof(WorkerConnected).FullName || type == typeof(WorkerDisconnected).FullName ||
         type == typeof(WorkerCapacityChanged).FullName || type == typeof(JudgeJobQueued).FullName ||
-        type == typeof(JudgeJobClaimed).FullName || type == typeof(JudgeJobCompleted).FullName;
+        type == typeof(JudgeJobClaimed).FullName || type == typeof(JudgeJobCompleted).FullName ||
+        ProblemStudioContracts.Contains(type);
 }

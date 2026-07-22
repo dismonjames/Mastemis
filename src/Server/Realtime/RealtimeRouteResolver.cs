@@ -19,6 +19,9 @@ public sealed class RealtimeRouteResolver(MastemisDbContext db)
             if (resolved is { } id) await AddSessionTargetsAsync(id, targets, cancellationToken);
         }
         if (TryGuid(root, "WorkerId", out var workerId)) targets.Add($"worker:{workerId:D}");
+        else if (TryGuid(root, "workerId", out workerId)) targets.Add($"worker:{workerId:D}");
+        if (TryGuid(root, "ProblemId", out var problemId) || TryGuid(root, "problemId", out problemId))
+            targets.Add($"problem:{problemId:D}");
         return targets;
     }
 

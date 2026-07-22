@@ -126,6 +126,7 @@ public sealed class ExamHub : Hub
 
     public Task JoinRoom(string roomId) => JoinAuthorizedAsync("room.realtime", "room", roomId);
     public Task JoinCandidate(string candidateId) => JoinAuthorizedAsync("candidate.realtime", "candidate", candidateId);
+    public Task JoinProblem(string problemId) => JoinAuthorizedAsync("problem.read", "problem", problemId);
     public async Task JoinChief(string examId)
     {
         if (!Guid.TryParse(examId, out var parsed)) throw new HubException(ErrorCodes.InvalidInput);
