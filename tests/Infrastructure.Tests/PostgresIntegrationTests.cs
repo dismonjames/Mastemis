@@ -136,10 +136,14 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
         _ = revisionId;
         db.SfeEvents.Add(new SfeEventRow { Id = eventId, SessionId = session, ClientSequence = 1, ClientTimestamp = DateTimeOffset.UtcNow, ServerReceivedAtUtc = DateTimeOffset.UtcNow, EventType = "test" });
         db.SfeEvaluations.Add(new SfeEvaluationRow { Id = evaluation, EventId = eventId, SessionId = session, Result = (int)EvaluationResult.ConfirmedViolation, ReasonCode = "test", EvaluatedAtUtc = DateTimeOffset.UtcNow });
-        db.ConfirmedWarnings.AddRange(
-            new WarningRow { Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), RoomId = Guid.NewGuid(), CandidateId = Guid.NewGuid(), SessionId = session, EvaluationId = evaluation, Ordinal = 1, IssuedAtUtc = DateTimeOffset.UtcNow },
-            new WarningRow { Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), RoomId = Guid.NewGuid(), CandidateId = Guid.NewGuid(), SessionId = session, EvaluationId = evaluation, Ordinal = 2, IssuedAtUtc = DateTimeOffset.UtcNow });
-        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync(TestContext.Current.CancellationToken));
+        db.ConfirmedWarnings.Add(new WarningRow { Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), RoomId = Guid.NewGuid(), CandidateId = Guid.NewGuid(), SessionId = session, EvaluationId = evaluation, Ordinal = 1, IssuedAtUtc = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // A separate context bypasses EF's one-to-one navigation fixup so this
+        // test reaches and verifies the PostgreSQL unique constraint itself.
+        await using var duplicate = CreateContext();
+        duplicate.ConfirmedWarnings.Add(new WarningRow { Id = Guid.NewGuid(), ExamId = Guid.NewGuid(), RoomId = Guid.NewGuid(), CandidateId = Guid.NewGuid(), SessionId = session, EvaluationId = evaluation, Ordinal = 2, IssuedAtUtc = DateTimeOffset.UtcNow });
+        await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync(TestContext.Current.CancellationToken));
     }
 
     private MastemisDbContext CreateContext() => new(new DbContextOptionsBuilder<MastemisDbContext>().UseNpgsql(_connectionString!).Options);

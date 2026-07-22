@@ -286,6 +286,10 @@ public sealed class PostgresRuntime(MastemisDbContext db, IClock clock)
         }
         foreach (var pair in _trackedSessions.Values)
         {
+            // Read-only workflows (for example ordinary submission validation)
+            // must not rotate the session token. Doing so made an unrelated
+            // submission race capable of aborting atomic third-warning termination.
+            if (pair.Domain.Version == pair.Row.Version) continue;
             var source = PersistenceMapper.ToRow(pair.Domain); pair.Row.State = source.State; pair.Row.StartedAtUtc = source.StartedAtUtc;
             pair.Row.TerminatedAtUtc = source.TerminatedAtUtc; pair.Row.CurrentRevisionId = source.CurrentRevisionId;
             pair.Row.FrozenRevisionId = source.FrozenRevisionId; pair.Row.Version = source.Version;
