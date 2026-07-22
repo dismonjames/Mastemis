@@ -8,5 +8,6 @@ public static class OperationalQueryEndpoints
         group.MapDashboardQueryEndpoints();
         group.MapExaminationQueryEndpoints();
         group.MapRoomCandidateQueryEndpoints();
+        group.MapWorkerQueryEndpoints();
     }
 }
