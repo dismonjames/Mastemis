@@ -24,19 +24,19 @@
         </Border>
 
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-            <Grid MaxWidth="860" Margin="28,36,28,44" HorizontalAlignment="Center">
-                <StackPanel Spacing="28">
+            <Grid MaxWidth="800" Margin="24,20,24,20" HorizontalAlignment="Center">
+                <StackPanel Spacing="18">
                     <StackPanel Spacing="7">
                         <TextBlock Text="Set up Mastemis" Style="{StaticResource MastemisPageTitleStyle}"/>
                         <TextBlock Text="Choose an operating mode, then verify the server before signing in." Style="{StaticResource MastemisMutedTextStyle}" FontSize="15"/>
                     </StackPanel>
 
-                    <StackPanel Spacing="12">
+                    <StackPanel Spacing="8">
                         <TextBlock Text="1  Choose a mode" Style="{StaticResource MastemisSectionTitleStyle}"/>
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <ToggleButton IsChecked="{Binding IsHostSelected, Mode=TwoWay}"
-                                          MinHeight="116" Padding="18" HorizontalContentAlignment="Stretch"
+                                          MinHeight="92" Padding="16" Style="{StaticResource MastemisModeToggleStyle}"
                                           AutomationProperties.Name="Host Mode">
                                 <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <FontIcon Glyph="&#xE968;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}" VerticalAlignment="Top" Margin="0,2,0,0"/>
@@ -44,7 +44,7 @@
                                 </Grid>
                             </ToggleButton>
                             <ToggleButton Grid.Column="1" IsChecked="{Binding IsConnectSelected, Mode=TwoWay}"
-                                          MinHeight="116" Padding="18" HorizontalContentAlignment="Stretch"
+                                          MinHeight="92" Padding="16" Style="{StaticResource MastemisModeToggleStyle}"
                                           AutomationProperties.Name="Connect Mode">
                                 <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <FontIcon Glyph="&#xE774;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}" VerticalAlignment="Top" Margin="0,2,0,0"/>
@@ -54,15 +54,15 @@
                         </Grid>
                     </StackPanel>
 
-                    <StackPanel Spacing="12">
+                    <StackPanel Spacing="8">
                         <TextBlock Text="2  Connect to a server" Style="{StaticResource MastemisSectionTitleStyle}"/>
-                        <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
-                            <StackPanel Spacing="13">
+                        <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <StackPanel Spacing="9">
                                 <StackPanel Spacing="5"><TextBlock Text="Server address" FontWeight="SemiBold"/><TextBlock Text="Use the HTTPS address supplied by the deployment administrator." Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
                                 <TextBox Text="{Binding ServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="https://mastemis.example.org" Style="{StaticResource MastemisFormTextBoxStyle}" AutomationProperties.Name="Mastemis server URL"/>
                                 <InfoBar IsOpen="{Binding IsDevelopmentHttp}" Severity="Warning" Title="Development HTTP" Message="Allowed only for the loopback address on this device." IsClosable="False"/>
 
-                                <Border Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="14" Background="{ThemeResource MastemisSubtleBrush}" CornerRadius="6">
+                                <Border Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="10" Background="{ThemeResource MastemisSubtleBrush}" CornerRadius="6">
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                         <FontIcon Glyph="&#xE946;" FontSize="18" Margin="0,2,12,0" Foreground="{ThemeResource MastemisAccentBrush}"/>
                                         <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="{Binding StatusTitle}" FontWeight="SemiBold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Text="{Binding ServerVersion}" Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
