@@ -88,8 +88,8 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
             "sorted" => Transform(Value(0), random, "sorted"),
             "reversed" => Transform(Value(0), random, "reversed"),
             "tree" => TreeGenerator.Generate(new(CheckedNodes(Int(0)), Bool(1, true), call.Arguments.Count > 2 ? checked((int)Int(2)) : null,
-                Bool(3, false), call.Arguments.Count > 4 ? ((MasString)Value(4)).Value : "random"), random),
-            "simpleGraph" => GraphGenerator.Generate(new(CheckedNodes(Int(0)), CheckedEdges(Int(1)), Bool(2, false), Bool(3, false), Bool(4, true)), random),
+                Bool(3, false), strategy == "adversarial-path" ? "path" : strategy == "adversarial-star" ? "star" : call.Arguments.Count > 4 ? ((MasString)Value(4)).Value : "random"), random),
+            "simpleGraph" => GenerateGraph(CheckedNodes(Int(0)), CheckedEdges(Int(1)), Bool(2, false), Bool(3, false), Bool(4, true), strategy, random),
             _ => throw Invalid()
         };
     }
@@ -101,9 +101,16 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
             check(); if (++attempts > Math.Max(100, length * 20)) throw new MasRuntimeException("mas.runtime.unique_impossible", "Unique generation is infeasible.");
             var value = Evaluate(generator, vars, random, strategy, check); if (!unique || set.Add(value)) values.Add(value);
         }
-        return new(values);
+        return new(values, unique);
     }
-    private static MasInteger Integer(long min, long max, SplitMix64Random random, string strategy) => new(strategy switch { "boundary-min" => min, "boundary-max" => max, _ => random.NextInt64(min, max) });
+    private static MasInteger Integer(long min, long max, SplitMix64Random random, string strategy) => new(strategy switch
+    {
+        "boundary-min" or "adversarial-min" => min,
+        "boundary-max" or "adversarial-max" => max,
+        "adversarial-near-min" => Math.Min(max, min + 1),
+        "adversarial-near-max" => Math.Max(min, max - 1),
+        _ => random.NextInt64(min, max)
+    });
     private static MasString RandomString(int length, string alphabet, SplitMix64Random random)
     { if (alphabet.Length == 0) throw Invalid(); var value = new char[length]; for (var i = 0; i < length; i++) value[i] = alphabet[(int)random.NextInt64(0, alphabet.Length - 1)]; return new(new(value)); }
     private static MasArray Permutation(long min, long max, SplitMix64Random random)
@@ -111,10 +118,33 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
     private static MasValue Transform(MasValue value, SplitMix64Random random, string operation)
     {
         if (value is not MasArray array) throw Invalid(); var values = array.Values.ToArray(); if (operation == "shuffle") Shuffle(values, random);
-        else System.Array.Sort(values, Compare); if (operation == "reversed") System.Array.Reverse(values); return new MasArray(values);
+        else System.Array.Sort(values, Compare); if (operation == "reversed") System.Array.Reverse(values); return new MasArray(values, array.IsUnique);
     }
     private static MasValue ApplyStrategy(MasValue value, string strategy, SplitMix64Random random) => strategy switch
-    { "sorted" => Transform(value, random, "sorted"), "reversed" => Transform(value, random, "reversed"), _ => value };
+    {
+        "sorted" or "adversarial-sorted" => value is MasArray ? Transform(value, random, "sorted") : value,
+        "reversed" or "adversarial-reversed" => value is MasArray ? Transform(value, random, "reversed") : value,
+        "duplicates" or "adversarial-all-equal" => DuplicateHeavy(value),
+        "adversarial-alternating" => Alternating(value),
+        _ => value
+    };
+    private static MasValue DuplicateHeavy(MasValue value) => value switch
+    {
+        MasArray { IsUnique: false, Values.Count: > 0 } array => new MasArray(Enumerable.Repeat(array.Values[0], array.Values.Count).ToArray()),
+        MasString { Value.Length: > 0 } text => new MasString(new string(text.Value[0], text.Value.Length)),
+        _ => value
+    };
+    private static MasValue Alternating(MasValue value)
+    {
+        if (value is not MasArray { IsUnique: false, Values.Count: > 1 } array) return value; var sorted = array.Values.OrderBy(x => x, Comparer<MasValue>.Create(Compare)).ToArray();
+        return new MasArray(Enumerable.Range(0, sorted.Length).Select(x => x % 2 == 0 ? sorted[0] : sorted[^1]).ToArray());
+    }
+    private static MasEdges GenerateGraph(int nodes, int edges, bool directed, bool connected, bool oneIndexed, string strategy, SplitMix64Random random)
+    {
+        var maximum = directed ? nodes * (nodes - 1) : nodes * (nodes - 1) / 2; if (strategy == "adversarial-sparse") { edges = Math.Max(connected ? nodes - 1 : 0, Math.Min(edges, nodes)); }
+        if (strategy == "adversarial-dense") edges = Math.Min(maximum, Math.Max(edges, maximum - Math.Min(nodes, maximum)));
+        return GraphGenerator.Generate(new(nodes, edges, directed, connected, oneIndexed), random);
+    }
     private int CheckedLength(long value) => value is < 0 or > int.MaxValue || value > limits.MaximumCollectionLength ? throw new MasRuntimeException("mas.runtime.collection_limit", "Collection length exceeds policy.") : (int)value;
     private int CheckedNodes(long value) => value is < 1 or > int.MaxValue || value > limits.MaximumGraphNodes ? throw new MasRuntimeException("mas.runtime.graph_limit", "Graph size exceeds policy.") : (int)value;
     private int CheckedEdges(long value) => value is < 0 or > int.MaxValue || value > limits.MaximumGraphEdges ? throw new MasRuntimeException("mas.runtime.graph_limit", "Graph edge count exceeds policy.") : (int)value;
@@ -131,7 +161,10 @@ public sealed class MasRuntime(MasRuntimeLimits limits)
     private static string Strategy(IReadOnlyList<string> directives, int index)
     {
         var strategies = new List<string>(); if (directives.Contains("boundaries")) { strategies.Add("boundary-min"); strategies.Add("boundary-max"); }
-        strategies.AddRange(directives.Where(x => x is "sorted" or "reversed" or "duplicates" or "adversarial")); return index < strategies.Count ? strategies[index] : "random";
+        strategies.AddRange(directives.Where(x => x is "sorted" or "reversed" or "duplicates"));
+        if (directives.Contains("adversarial")) strategies.AddRange(["adversarial-min", "adversarial-max", "adversarial-near-min", "adversarial-near-max",
+            "adversarial-all-equal", "adversarial-alternating", "adversarial-sorted", "adversarial-reversed", "adversarial-path", "adversarial-star", "adversarial-sparse", "adversarial-dense"]);
+        return index < strategies.Count ? strategies[index] : "random";
     }
     private static MasRuntimeException Invalid() => new("mas.runtime.invalid_operation", "MAS runtime operation is invalid.");
 }
