@@ -114,6 +114,8 @@ if (durableMode)
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
     builder.Services.AddScoped<ProblemStatementService>();
+    builder.Services.AddScoped<IProblemAssetStore, PostgresProblemAssetStore>();
+    builder.Services.AddScoped<ProblemAssetService>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();

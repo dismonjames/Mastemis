@@ -72,6 +72,13 @@ public sealed class FileProblemObjectStorage(string rootPath, IClock clock) : IP
         return Task.CompletedTask;
     }
 
+    public Task DeleteReferencedAsync(string objectId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested(); var path = ProblemObjectPath.Resolve(_root, objectId, false);
+        try { File.Delete(path); } catch (DirectoryNotFoundException) { }
+        return Task.CompletedTask;
+    }
+
     private static string Category(ProblemObjectKind kind) => kind switch
     {
         ProblemObjectKind.Asset => "asset",

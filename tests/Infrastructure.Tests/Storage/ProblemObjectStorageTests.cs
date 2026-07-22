@@ -24,6 +24,8 @@ public sealed class ProblemObjectStorageTests : IAsyncDisposable
         using var reader = new StreamReader(content);
         Assert.Equal("input\n", await reader.ReadToEndAsync(TestContext.Current.CancellationToken));
         await storage.MarkReferencedAsync(staged.ObjectId, TestContext.Current.CancellationToken);
+        await storage.DeleteReferencedAsync(staged.ObjectId, TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<ApplicationFailure>(() => storage.OpenReadAsync(staged.ObjectId, 100, TestContext.Current.CancellationToken));
     }
 
     [Fact]
