@@ -2,6 +2,7 @@ using Mastemis.Server.Endpoints.ProblemStudio.Assets;
 using Mastemis.Server.Endpoints.ProblemStudio.Drafts;
 using Mastemis.Server.Endpoints.ProblemStudio.Generation;
 using Mastemis.Server.Endpoints.ProblemStudio.Mas;
+using Mastemis.Server.Endpoints.ProblemStudio.Packages;
 using Mastemis.Server.Endpoints.ProblemStudio.ReferenceSolutions;
 using Mastemis.Server.Endpoints.ProblemStudio.Statements;
 using Mastemis.Server.Endpoints.ProblemStudio.Tests;
@@ -21,5 +22,6 @@ public static class ProblemStudioEndpoints
         group.MapProblemMasEndpoints();
         group.MapProblemGenerationEndpoints();
         group.MapProblemTestEndpoints();
+        group.MapProblemPackageEndpoints();
     }
 }

@@ -118,6 +118,7 @@ if (durableMode)
     builder.Services.AddScoped<IReferenceOutputJobScheduler, PostgresReferenceOutputJobScheduler>();
     builder.Services.AddScoped<IProblemTestSetPublisher, PostgresProblemTestSetPublisher>();
     builder.Services.AddScoped<IProblemTestQueryService, PostgresProblemTestQueryService>();
+    builder.Services.AddScoped<IProblemPackageService, PostgresProblemPackageService>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemObjectReconciler>();
