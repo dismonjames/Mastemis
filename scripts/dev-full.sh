@@ -154,7 +154,18 @@ compose+=(--env-file "$compose_environment_file")
 if $reset && [[ -d "$repo_root/deploy/compose/data" ]]; then
   backup_dir="$state_dir/database-backup-$(date -u +%Y%m%dT%H%M%SZ)"
   "${compose[@]}" -f "$compose_file" down >/dev/null 2>&1 || true
-  mv -- "$repo_root/deploy/compose/data" "$backup_dir"
+  database_dir="$repo_root/deploy/compose/data"
+  if ! mv -- "$database_dir" "$backup_dir" 2>/dev/null; then
+    # Bind-mounted database directories are commonly created by the container's
+    # root user. Use elevated filesystem access only for this rename; all .NET
+    # build and runtime processes continue to run as the invoking user.
+    if ! command -v sudo >/dev/null 2>&1 || ! sudo mv -- "$database_dir" "$backup_dir"; then
+      printf 'Unable to move the PostgreSQL data directory during reset: %s\n' "$database_dir" >&2
+      printf 'Repair its ownership with: sudo chown -R %q:%q %q\n' \
+        "$(id -un)" "$(id -gn)" "$database_dir" >&2
+      exit 10
+    fi
+  fi
   printf 'Existing database moved to %s\n' "$backup_dir"
 fi
 
