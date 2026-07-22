@@ -13,15 +13,24 @@ public sealed class RoomOperationsViewModel : ObservableObject
     private string name = string.Empty;
     private bool isBusy;
     private string? error;
-    public RoomOperationsViewModel(IRoomClient client) { this.client = client; CreateCommand = new AsyncCommand(CreateAsync); }
+    public RoomOperationsViewModel(IRoomClient client) { this.client = client; CreateCommand = new AsyncCommand(CreateAsync); RefreshCommand = new AsyncCommand(RefreshAsync); }
     public ICommand CreateCommand { get; }
+    public ICommand RefreshCommand { get; }
     public ObservableCollection<RoomSummary> CreatedRooms { get; } = [];
+    public ObservableCollection<RoomListItem> Rooms { get; } = [];
     public string ExamId { get => examId; set => SetProperty(ref examId, value); }
     public string Name { get => name; set => SetProperty(ref name, value); }
     public bool IsBusy { get => isBusy; private set => SetProperty(ref isBusy, value); }
     public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } }
     public bool HasError => Error is not null;
     public bool HasRooms => CreatedRooms.Count > 0;
+    public bool HasLoadedRooms => Rooms.Count > 0;
+    private async Task RefreshAsync(CancellationToken cancellationToken)
+    {
+        Error = null; if (!Guid.TryParse(ExamId, out var id)) { Error = "Enter a valid examination ID."; return; }
+        IsBusy = true; try { var page = await client.ListAsync(id, null, cancellationToken).ConfigureAwait(true); Rooms.Clear(); foreach (var room in page?.Items ?? []) Rooms.Add(room); OnPropertyChanged(nameof(HasLoadedRooms)); }
+        catch (ApiException value) { Error = value.Problem.Title; } finally { IsBusy = false; }
+    }
     private async Task CreateAsync(CancellationToken cancellationToken)
     {
         Error = null;
