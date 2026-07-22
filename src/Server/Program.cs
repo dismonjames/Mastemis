@@ -9,6 +9,7 @@ using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
 using Mastemis.Infrastructure.Persistence.Outbox;
+using Mastemis.Infrastructure.Persistence.Queue;
 using Mastemis.Infrastructure.Storage.Reconciliation;
 using Mastemis.Infrastructure.Storage.SourceRevisions;
 using Mastemis.Server.Authorization;
@@ -42,6 +43,7 @@ builder.Services.AddRateLimiter(options => options.GlobalLimiter = PartitionedRa
 
 var connectionString = builder.Configuration.GetConnectionString("Mastemis");
 var storageRoot = builder.Configuration["Storage:Path"] ?? Path.Combine(AppContext.BaseDirectory, "storage");
+var judgeDataRoot = builder.Configuration["Judge:DataPath"] ?? Path.Combine(AppContext.BaseDirectory, "judge-data");
 var reconciliationOptions = new SourceReconciliationOptions(storageRoot,
     TimeSpan.FromMinutes(int.TryParse(builder.Configuration["Storage:OrphanAgeMinutes"], out var orphanMinutes) ? Math.Clamp(orphanMinutes, 5, 10080) : 1440),
     TimeSpan.FromMinutes(int.TryParse(builder.Configuration["Storage:ReconciliationIntervalMinutes"], out var scanMinutes) ? Math.Clamp(scanMinutes, 1, 1440) : 60),
@@ -82,6 +84,8 @@ if (durableMode)
     builder.Services.AddScoped<IDurableJudgeQueue, LegacyDurableJudgeQueue>();
     builder.Services.AddScoped<ITransactionalOutbox>(sp => sp.GetRequiredService<PostgresRuntime>());
     builder.Services.AddScoped<IWorkerJudgeQueue, PostgresWorkerJudgeQueue>();
+    builder.Services.AddSingleton(new WorkerJobPayloadOptions(storageRoot, judgeDataRoot));
+    builder.Services.AddScoped<WorkerJobPayloadService>();
     builder.Services.AddScoped<IWorkerCredentialService, WorkerCredentialService>();
     builder.Services.AddScoped<IHumanIdentityAdministration, HumanIdentityAdministration>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();

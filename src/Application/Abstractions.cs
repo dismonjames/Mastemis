@@ -58,8 +58,15 @@ public interface IWorkerJudgeQueue
     Task RenewAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, TimeSpan leaseDuration, CancellationToken cancellationToken);
     Task StartAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, CancellationToken cancellationToken);
     Task CompleteAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, Judgement judgement, CancellationToken cancellationToken);
+    Task CompleteDetailedAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId,
+        WorkerJudgementCompletion completion, CancellationToken cancellationToken) =>
+        CompleteAsync(workerId, jobId, leaseId, completion.Judgement, cancellationToken);
     Task FailAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, string failureCode, CancellationToken cancellationToken);
 }
+public sealed record WorkerJudgementCompletion(Judgement Judgement, int? FailedTestIndex, long ExecutionMilliseconds,
+    long? PeakMemoryBytes, int? ExitCode, int? Signal, long StandardOutputBytes, long StandardErrorBytes,
+    string? CompilerDiagnosticSummary, string? RuntimeDiagnosticSummary, string? CheckerDiagnosticSummary,
+    string SandboxBackend, JudgeWorkerId WorkerId, string JudgeVersion);
 public sealed record WorkerJobLease(JudgeJobId JobId, SubmissionId SubmissionId, Guid LeaseId,
     DateTimeOffset LeaseExpiresAtUtc, int Attempt, int MaximumAttempts);
 public interface IWorkerCredentialService

@@ -17,6 +17,8 @@ public sealed class MastemisDbContext(DbContextOptions<MastemisDbContext> option
     public DbSet<SourceRevisionRow> SourceRevisions => Set<SourceRevisionRow>();
     public DbSet<SubmissionRow> Submissions => Set<SubmissionRow>();
     public DbSet<JudgementRow> Judgements => Set<JudgementRow>();
+    public DbSet<ProblemJudgeProfileRow> ProblemJudgeProfiles => Set<ProblemJudgeProfileRow>();
+    public DbSet<ProblemTestCaseRow> ProblemTestCases => Set<ProblemTestCaseRow>();
     public DbSet<SfeEventRow> SfeEvents => Set<SfeEventRow>();
     public DbSet<SfeEvaluationRow> SfeEvaluations => Set<SfeEvaluationRow>();
     public DbSet<WarningRow> ConfirmedWarnings => Set<WarningRow>();
@@ -75,11 +77,54 @@ public sealed class SessionRow
 }
 public sealed class SourceRevisionRow { public Guid Id { get; set; } public Guid SessionId { get; set; } public string ObjectId { get; set; } = string.Empty; public string Sha256 { get; set; } = string.Empty; public long Length { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } }
 public sealed class SubmissionRow { public Guid Id { get; set; } public Guid SessionId { get; set; } public Guid ProblemId { get; set; } public Guid RevisionId { get; set; } public string Language { get; set; } = string.Empty; public int State { get; set; } public bool IsFinal { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } }
-public sealed class JudgementRow { public Guid SubmissionId { get; set; } public int Verdict { get; set; } public int Score { get; set; } public DateTimeOffset CompletedAtUtc { get; set; } }
+public sealed class JudgementRow
+{
+    public Guid SubmissionId { get; set; }
+    public int Verdict { get; set; }
+    public int Score { get; set; }
+    public DateTimeOffset CompletedAtUtc { get; set; }
+    public int? FailedTestIndex { get; set; }
+    public long ExecutionMilliseconds { get; set; }
+    public long? PeakMemoryBytes { get; set; }
+    public int? ExitCode { get; set; }
+    public int? Signal { get; set; }
+    public long StandardOutputBytes { get; set; }
+    public long StandardErrorBytes { get; set; }
+    public string? CompilerDiagnosticSummary { get; set; }
+    public string? RuntimeDiagnosticSummary { get; set; }
+    public string? CheckerDiagnosticSummary { get; set; }
+    public string SandboxBackend { get; set; } = string.Empty;
+    public Guid? WorkerId { get; set; }
+    public string JudgeVersion { get; set; } = string.Empty;
+}
+public sealed class ProblemJudgeProfileRow
+{
+    public Guid ProblemId { get; set; }
+    public long CpuMilliseconds { get; set; }
+    public long WallMilliseconds { get; set; }
+    public long MemoryBytes { get; set; }
+    public long OutputBytes { get; set; }
+    public long FileBytes { get; set; }
+    public int ProcessCount { get; set; }
+    public int TestCount { get; set; }
+    public long CompilationMilliseconds { get; set; }
+    public long CompilationOutputBytes { get; set; }
+}
+public sealed class ProblemTestCaseRow
+{
+    public Guid Id { get; set; }
+    public Guid ProblemId { get; set; }
+    public int TestIndex { get; set; }
+    public string InputObjectId { get; set; } = string.Empty;
+    public string ExpectedObjectId { get; set; } = string.Empty;
+    public long InputBytes { get; set; }
+    public long ExpectedBytes { get; set; }
+    public string CheckerId { get; set; } = "exact";
+}
 public sealed class SfeEventRow { public Guid Id { get; set; } public Guid SessionId { get; set; } public long ClientSequence { get; set; } public DateTimeOffset ClientTimestamp { get; set; } public DateTimeOffset ServerReceivedAtUtc { get; set; } public string EventType { get; set; } = string.Empty; public string MetadataJson { get; set; } = "{}"; }
 public sealed class SfeEvaluationRow { public Guid Id { get; set; } public Guid EventId { get; set; } public Guid SessionId { get; set; } public int Result { get; set; } public string ReasonCode { get; set; } = string.Empty; public string PolicyVersion { get; set; } = "baseline.v1"; public DateTimeOffset EvaluatedAtUtc { get; set; } }
 public sealed class WarningRow { public Guid Id { get; set; } public Guid ExamId { get; set; } public Guid RoomId { get; set; } public Guid CandidateId { get; set; } public Guid SessionId { get; set; } public Guid EvaluationId { get; set; } public int Ordinal { get; set; } public DateTimeOffset IssuedAtUtc { get; set; } }
-public sealed class JudgeWorkerRow { public Guid Id { get; set; } public string Name { get; set; } = string.Empty; public int Capacity { get; set; } public bool IsEnabled { get; set; } public DateTimeOffset? LastHeartbeatUtc { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } }
+public sealed class JudgeWorkerRow { public Guid Id { get; set; } public string Name { get; set; } = string.Empty; public int Capacity { get; set; } public bool IsEnabled { get; set; } public DateTimeOffset? LastHeartbeatUtc { get; set; } public DateTimeOffset CreatedAtUtc { get; set; } public string LanguagesJson { get; set; } = "[]"; public string? SandboxBackend { get; set; } }
 public sealed class WorkerCredentialRow { public Guid Id { get; set; } public Guid WorkerId { get; set; } public string SecretHash { get; set; } = string.Empty; public DateTimeOffset CreatedAtUtc { get; set; } public DateTimeOffset? ExpiresAtUtc { get; set; } public DateTimeOffset? RevokedAtUtc { get; set; } }
 public sealed class JudgeJobRow
 {

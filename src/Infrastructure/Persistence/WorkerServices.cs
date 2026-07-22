@@ -70,6 +70,19 @@ public sealed class WorkerCredentialService(MastemisDbContext db, IClock clock, 
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task HeartbeatAsync(JudgeWorkerId workerId, int capacity, IReadOnlyList<string> languages,
+        string sandboxBackend, CancellationToken cancellationToken)
+    {
+        if (languages.Count is < 1 or > 16 || languages.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 32) ||
+            string.IsNullOrWhiteSpace(sandboxBackend) || sandboxBackend.Length > 100)
+            throw new ApplicationFailure(ErrorCodes.InvalidInput, "Worker capabilities are invalid.");
+        await HeartbeatAsync(workerId, capacity, cancellationToken);
+        var worker = await db.JudgeWorkers.SingleAsync(x => x.Id == workerId.Value, cancellationToken);
+        worker.LanguagesJson = JsonSerializer.Serialize(languages.Distinct(StringComparer.OrdinalIgnoreCase).Order().ToArray());
+        worker.SandboxBackend = sandboxBackend;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     private IssuedWorkerCredential CreateCredential(Guid workerId, DateTimeOffset? expiresAtUtc)
     {
         var secret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
@@ -126,7 +139,14 @@ public sealed class PostgresWorkerJudgeQueue(MastemisDbContext db, IClock clock)
     }
 
     public async Task CompleteAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, Judgement judgement, CancellationToken cancellationToken)
+        => await CompleteDetailedAsync(workerId, jobId, leaseId, new(judgement, null, 0, null, null, null, 0, 0,
+            null, null, null, "legacy", workerId, "legacy"), cancellationToken);
+
+    public async Task CompleteDetailedAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId,
+        WorkerJudgementCompletion completion, CancellationToken cancellationToken)
     {
+        var judgement = completion.Judgement;
+        ValidateCompletion(workerId, completion);
         var existing = await db.JudgeJobs.SingleOrDefaultAsync(x => x.Id == jobId.Value, cancellationToken)
             ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Job not found.");
         if (existing.State == (int)JudgeJobState.Completed && existing.WorkerId == workerId.Value) return;
@@ -140,11 +160,35 @@ public sealed class PostgresWorkerJudgeQueue(MastemisDbContext db, IClock clock)
                 SubmissionId = row.SubmissionId,
                 Verdict = (int)judgement.Verdict,
                 Score = judgement.Score,
-                CompletedAtUtc = clock.UtcNow
+                CompletedAtUtc = clock.UtcNow,
+                FailedTestIndex = completion.FailedTestIndex,
+                ExecutionMilliseconds = completion.ExecutionMilliseconds,
+                PeakMemoryBytes = completion.PeakMemoryBytes,
+                ExitCode = completion.ExitCode,
+                Signal = completion.Signal,
+                StandardOutputBytes = completion.StandardOutputBytes,
+                StandardErrorBytes = completion.StandardErrorBytes,
+                CompilerDiagnosticSummary = completion.CompilerDiagnosticSummary,
+                RuntimeDiagnosticSummary = completion.RuntimeDiagnosticSummary,
+                CheckerDiagnosticSummary = completion.CheckerDiagnosticSummary,
+                SandboxBackend = completion.SandboxBackend,
+                WorkerId = workerId.Value,
+                JudgeVersion = completion.JudgeVersion
             });
         AddOutbox(new JudgeJobCompleted(jobId, new SubmissionId(row.SubmissionId)));
         AddOutbox(new JudgementUpdated(new SubmissionId(row.SubmissionId), judgement.Verdict));
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void ValidateCompletion(JudgeWorkerId workerId, WorkerJudgementCompletion completion)
+    {
+        if (completion.WorkerId != workerId || completion.ExecutionMilliseconds < 0 || completion.PeakMemoryBytes < 0 ||
+            completion.StandardOutputBytes < 0 || completion.StandardErrorBytes < 0 || completion.FailedTestIndex < 0 ||
+            string.IsNullOrWhiteSpace(completion.SandboxBackend) || completion.SandboxBackend.Length > 100 ||
+            string.IsNullOrWhiteSpace(completion.JudgeVersion) || completion.JudgeVersion.Length > 100 ||
+            completion.CompilerDiagnosticSummary?.Length > 4096 || completion.RuntimeDiagnosticSummary?.Length > 1024 ||
+            completion.CheckerDiagnosticSummary?.Length > 1024)
+            throw new ApplicationFailure(ErrorCodes.InvalidInput, "Judgement result metadata is invalid.");
     }
 
     public async Task FailAsync(JudgeWorkerId workerId, JudgeJobId jobId, Guid leaseId, string failureCode, CancellationToken cancellationToken)

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../Application/Mastemis.Application.csproj" />
+    <ProjectReference Include="../Contracts/Mastemis.Contracts.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />

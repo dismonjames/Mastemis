@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
     <ProjectReference Include="../Application/Mastemis.Application.csproj" />
+    <ProjectReference Include="../Contracts/Mastemis.Contracts.csproj" />
     <ProjectReference Include="../Infrastructure/Mastemis.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.OpenApi" />

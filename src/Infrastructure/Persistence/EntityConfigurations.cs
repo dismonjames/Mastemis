@@ -45,7 +45,15 @@ internal sealed class SubmissionConfiguration : IEntityTypeConfiguration<Submiss
 }
 internal sealed class JudgementConfiguration : IEntityTypeConfiguration<JudgementRow>
 {
-    public void Configure(EntityTypeBuilder<JudgementRow> b) { b.ToTable("judgements"); b.HasKey(x => x.SubmissionId); b.HasOne<SubmissionRow>().WithOne().HasForeignKey<JudgementRow>(x => x.SubmissionId).OnDelete(DeleteBehavior.Restrict); }
+    public void Configure(EntityTypeBuilder<JudgementRow> b) { b.ToTable("judgements"); b.HasKey(x => x.SubmissionId); b.Property(x => x.CompilerDiagnosticSummary).HasMaxLength(4096); b.Property(x => x.RuntimeDiagnosticSummary).HasMaxLength(1024); b.Property(x => x.CheckerDiagnosticSummary).HasMaxLength(1024); b.Property(x => x.SandboxBackend).HasMaxLength(100); b.Property(x => x.JudgeVersion).HasMaxLength(100); b.HasIndex(x => new { x.WorkerId, x.CompletedAtUtc }); b.HasOne<SubmissionRow>().WithOne().HasForeignKey<JudgementRow>(x => x.SubmissionId).OnDelete(DeleteBehavior.Restrict); }
+}
+internal sealed class ProblemJudgeProfileConfiguration : IEntityTypeConfiguration<ProblemJudgeProfileRow>
+{
+    public void Configure(EntityTypeBuilder<ProblemJudgeProfileRow> b) { b.ToTable("problem_judge_profiles"); b.HasKey(x => x.ProblemId); }
+}
+internal sealed class ProblemTestCaseConfiguration : IEntityTypeConfiguration<ProblemTestCaseRow>
+{
+    public void Configure(EntityTypeBuilder<ProblemTestCaseRow> b) { b.ToTable("problem_test_cases"); b.HasKey(x => x.Id); b.Property(x => x.InputObjectId).HasMaxLength(300); b.Property(x => x.ExpectedObjectId).HasMaxLength(300); b.Property(x => x.CheckerId).HasMaxLength(32); b.HasIndex(x => new { x.ProblemId, x.TestIndex }).IsUnique(); }
 }
 internal sealed class SfeEventConfiguration : IEntityTypeConfiguration<SfeEventRow>
 {
@@ -61,7 +69,7 @@ internal sealed class WarningConfiguration : IEntityTypeConfiguration<WarningRow
 }
 internal sealed class WorkerConfiguration : IEntityTypeConfiguration<JudgeWorkerRow>
 {
-    public void Configure(EntityTypeBuilder<JudgeWorkerRow> b) { b.ToTable("judge_workers"); b.HasKey(x => x.Id); b.Property(x => x.Name).HasMaxLength(200); b.HasIndex(x => x.LastHeartbeatUtc); }
+    public void Configure(EntityTypeBuilder<JudgeWorkerRow> b) { b.ToTable("judge_workers"); b.HasKey(x => x.Id); b.Property(x => x.Name).HasMaxLength(200); b.Property(x => x.LanguagesJson).HasColumnType("jsonb"); b.Property(x => x.SandboxBackend).HasMaxLength(100); b.HasIndex(x => x.LastHeartbeatUtc); }
 }
 internal sealed class WorkerCredentialConfiguration : IEntityTypeConfiguration<WorkerCredentialRow>
 {
