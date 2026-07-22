@@ -20,7 +20,7 @@ internal static class ProblemObjectPath
         identifier = string.Empty;
         var segments = objectId.Split('/');
         if (segments.Length != 3 || segments[0] != "problem" || !Guid.TryParseExact(segments[2], "N", out _)) return false;
-        if (segments[1] is not ("asset" or "package" or "test-input" or "expected-output" or "reference-source" or "export")) return false;
+        if (segments[1] is not ("asset" or "statement" or "package" or "test-input" or "expected-output" or "reference-source" or "export")) return false;
         category = segments[1];
         identifier = segments[2];
         return true;

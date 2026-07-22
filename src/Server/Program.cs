@@ -7,6 +7,7 @@ using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Authorization;
 using Mastemis.Application.Problems.Generation;
+using Mastemis.Application.Problems.Statements;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
 using Mastemis.Infrastructure.Persistence;
@@ -111,6 +112,8 @@ if (durableMode)
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemStudioService>();
+    builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
+    builder.Services.AddScoped<ProblemStatementService>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();

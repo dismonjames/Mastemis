@@ -75,6 +75,7 @@ public sealed class FileProblemObjectStorage(string rootPath, IClock clock) : IP
     private static string Category(ProblemObjectKind kind) => kind switch
     {
         ProblemObjectKind.Asset => "asset",
+        ProblemObjectKind.Statement => "statement",
         ProblemObjectKind.Package => "package",
         ProblemObjectKind.TestInput => "test-input",
         ProblemObjectKind.ExpectedOutput => "expected-output",

@@ -19,6 +19,7 @@ internal sealed class ProblemStatementConfiguration : IEntityTypeConfiguration<P
     public void Configure(EntityTypeBuilder<ProblemStatementRow> b)
     {
         b.ToTable("problem_statements"); b.HasKey(x => new { x.ProblemId, x.Locale }); b.Property(x => x.Locale).HasMaxLength(16);
+        b.Property(x => x.Title).HasMaxLength(300);
         b.Property(x => x.ObjectId).HasMaxLength(300); b.Property(x => x.Sha256).HasMaxLength(64); b.HasIndex(x => new { x.ProblemId, x.UpdatedAtUtc });
         b.HasOne<ProblemDraftRow>().WithMany().HasForeignKey(x => x.ProblemId).OnDelete(DeleteBehavior.Cascade);
     }
