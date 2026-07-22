@@ -12,22 +12,22 @@
             <ProgressBar IsIndeterminate="{Binding IsBusy}" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
             <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <controls:MetricTile Label="{Binding PrimaryMetricLabel}" Value="—" Detail="No aggregate endpoint" Glyph="&#xE787;"/>
-                <controls:MetricTile Grid.Column="1" Label="{Binding SecondaryMetricLabel}" Value="—" Detail="No aggregate endpoint" Glyph="&#xE9D9;"/>
+                <controls:MetricTile Label="{Binding PrimaryMetricLabel}" Value="{Binding PrimaryMetric}" Detail="Authorized live aggregate" Glyph="&#xE787;"/>
+                <controls:MetricTile Grid.Column="1" Label="{Binding SecondaryMetricLabel}" Value="{Binding SecondaryMetric}" Detail="Authorized live aggregate" Glyph="&#xE9D9;"/>
                 <controls:MetricTile Grid.Column="2" Label="Server readiness" Value="{Binding HealthState}" Detail="PostgreSQL · queues · storage" Glyph="&#xE930;"/>
                 <controls:MetricTile Grid.Column="3" Label="Realtime activity" Value="{Binding RecentActivity.Count}" Detail="This client session" Glyph="&#xE753;"/>
             </Grid>
 
             <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                 <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
-                    <StackPanel><Grid Padding="18,14" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1"><TextBlock Text="Operational focus" Style="{StaticResource MastemisSectionTitleStyle}"/></Grid><controls:EmptyState Title="No aggregate operational data" Message="This server version does not expose a dashboard aggregate. Open a scoped examination, room, or problem to load authoritative records." Glyph="&#xE80F;"/></StackPanel>
+                    <StackPanel><Grid Padding="18,14" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1"><TextBlock Text="Operational focus" Style="{StaticResource MastemisSectionTitleStyle}"/></Grid><controls:EmptyState Visibility="{Binding HasOperationalData, Converter={StaticResource InverseBooleanToVisibilityConverter}}" Title="No operational data" Message="There are no authorized active records for this role." Glyph="&#xE80F;"/><StackPanel Visibility="{Binding HasOperationalData, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="18" Spacing="10"><TextBlock Text="Active candidates" Style="{StaticResource MastemisCaptionTextStyle}"/><TextBlock Text="{Binding Snapshot.ActiveCandidates}" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="{Binding DisconnectedSummary}"/><TextBlock Text="{Binding WorkerSummary}"/><TextBlock Text="{Binding CapacitySummary}"/></StackPanel></StackPanel>
                 </Border>
                 <Border Grid.Column="1" Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
                     <StackPanel><Grid Padding="18,14" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1"><TextBlock Text="Recent realtime activity" Style="{StaticResource MastemisSectionTitleStyle}"/></Grid><controls:EmptyState Visibility="{Binding HasRecentActivity, Converter={StaticResource InverseBooleanToVisibilityConverter}}" Title="No events yet" Message="Authorized realtime events will appear here after group subscription." Glyph="&#xE753;"/><ListView ItemsSource="{Binding RecentActivity}" MinHeight="160"><ListView.ItemTemplate><DataTemplate><Grid Padding="8,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Type}"/><TextBlock Grid.Column="1" Text="{Binding OccurredAtUtc}" Style="{StaticResource MastemisCaptionTextStyle}"/></Grid></DataTemplate></ListView.ItemTemplate></ListView></StackPanel>
                 </Border>
             </Grid>
 
-            <TextBlock Text="Metrics remain unavailable until the backend exposes authorized aggregate queries; Mastemis never fabricates operational counts." Style="{StaticResource MastemisCaptionTextStyle}"/>
+            <TextBlock Text="Metrics are server-authoritative and scoped to the signed-in user." Style="{StaticResource MastemisCaptionTextStyle}"/>
         </StackPanel>
     </ScrollViewer>
 </Page>

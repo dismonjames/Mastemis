@@ -12,14 +12,17 @@ public sealed class DashboardViewModel : ObservableObject
 {
     private readonly ClientSession session;
     private readonly IServerProbe probe;
+    private readonly IDashboardClient dashboard;
     private bool isBusy;
     private string healthState = "Not checked";
     private string? error;
 
-    public DashboardViewModel(ClientSession session, IServerProbe probe, RealtimeClient realtime)
+    private DashboardSnapshot? snapshot;
+    public DashboardViewModel(ClientSession session, IServerProbe probe, IDashboardClient dashboard, RealtimeClient realtime)
     {
         this.session = session;
         this.probe = probe;
+        this.dashboard = dashboard;
         RefreshCommand = new AsyncCommand(RefreshAsync);
         session.Changed += (_, _) => RefreshIdentity();
         realtime.EventReceived += (_, envelope) =>
@@ -40,6 +43,13 @@ public sealed class DashboardViewModel : ObservableObject
     public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } }
     public bool HasError => Error is not null;
     public bool HasRecentActivity => RecentActivity.Count > 0;
+    public DashboardSnapshot? Snapshot { get => snapshot; private set { if (SetProperty(ref snapshot, value)) { OnPropertyChanged(nameof(PrimaryMetric)); OnPropertyChanged(nameof(SecondaryMetric)); OnPropertyChanged(nameof(HasOperationalData)); OnPropertyChanged(nameof(DisconnectedSummary)); OnPropertyChanged(nameof(WorkerSummary)); OnPropertyChanged(nameof(CapacitySummary)); } } }
+    public bool HasOperationalData => Snapshot is not null;
+    public string PrimaryMetric => Snapshot is null ? "—" : IsCandidate ? Snapshot.SubmittedProblems.ToString() : IsInvigilator ? Snapshot.ActiveCandidates.ToString() : Snapshot.ActiveExaminations.ToString();
+    public string SecondaryMetric => Snapshot is null ? "—" : IsCandidate ? Snapshot.PendingJudgements.ToString() : IsInvigilator ? Snapshot.WarningCount.ToString() : Snapshot.PendingJudgeJobs.ToString();
+    public string DisconnectedSummary => $"Disconnected: {Snapshot?.DisconnectedCandidates ?? 0}";
+    public string WorkerSummary => $"Ready workers: {Snapshot?.ActiveWorkers ?? 0}";
+    public string CapacitySummary => $"Total judge capacity: {Snapshot?.TotalWorkerCapacity ?? 0}";
     public bool IsCandidate => session.HasAnyRole("Candidate");
     public bool IsInvigilator => session.HasAnyRole("ChiefInvigilator", "RoomInvigilator");
     public string DashboardContext => IsCandidate ? "Candidate overview" : IsInvigilator ? "Live examination overview" : "Operations overview";
@@ -56,6 +66,7 @@ public sealed class DashboardViewModel : ObservableObject
             var result = await probe.ProbeAsync(session.ServerBaseUri, cancellationToken).ConfigureAwait(true);
             HealthState = result.IsReady ? "Ready" : result.IsAvailable ? "Degraded" : "Unavailable";
             if (!result.IsAvailable) Error = result.Error;
+            if (result.IsAvailable) Snapshot = await dashboard.GetAsync(cancellationToken).ConfigureAwait(true);
         }
         finally { IsBusy = false; }
     }
