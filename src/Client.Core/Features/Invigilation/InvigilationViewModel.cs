@@ -9,14 +9,16 @@ namespace Mastemis.Client.Core.Features.Invigilation;
 public sealed class InvigilationViewModel : ObservableObject
 {
     private readonly RealtimeClient realtime;
+    private readonly IInvigilationClient client;
     private string examinationId = string.Empty;
     private string filter = "All";
     private string state = "Not subscribed";
     private string? error;
 
-    public InvigilationViewModel(RealtimeClient realtime)
+    public InvigilationViewModel(RealtimeClient realtime, IInvigilationClient client)
     {
         this.realtime = realtime;
+        this.client = client;
         SubscribeCommand = new AsyncCommand(SubscribeAsync);
         realtime.EventReceived += OnEventReceived;
         realtime.StateChanged += (_, _) => { State = realtime.State.ToString(); };
@@ -24,6 +26,8 @@ public sealed class InvigilationViewModel : ObservableObject
 
     public ObservableCollection<InvigilationEventItem> Events { get; } = [];
     public ObservableCollection<InvigilationEventItem> VisibleEvents { get; } = [];
+    public ObservableCollection<LiveCandidate> Candidates { get; } = [];
+    public ObservableCollection<LiveRoom> Rooms { get; } = [];
     public IReadOnlyList<string> Filters { get; } = ["All", "Warning", "Session", "Submission", "Other"];
     public ICommand SubscribeCommand { get; }
     public string ExaminationId { get => examinationId; set => SetProperty(ref examinationId, value); }
@@ -41,6 +45,10 @@ public sealed class InvigilationViewModel : ObservableObject
         {
             await realtime.ConnectAsync(cancellationToken).ConfigureAwait(true);
             await realtime.JoinAsync("exam", id, cancellationToken).ConfigureAwait(true);
+            var snapshot = await client.GetExamAsync(id, cancellationToken).ConfigureAwait(true);
+            Candidates.Clear(); Rooms.Clear();
+            foreach (var item in snapshot?.Candidates ?? []) Candidates.Add(item);
+            foreach (var item in snapshot?.Rooms ?? []) Rooms.Add(item);
             State = "Live · examination scope joined";
         }
         catch (Exception value) when (value is InvalidOperationException or HttpRequestException)
