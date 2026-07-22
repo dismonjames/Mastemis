@@ -17,6 +17,9 @@ The script prints the server URL, generated test credentials, health/OpenAPI URL
 and log location. Credentials and TLS material are generated under the gitignored `.mastemis-dev/`
 directory with restrictive permissions. Use `./scripts/dev-full.sh --reset` to move an existing local
 database aside and start clean, or `--no-ui` to run only PostgreSQL and the server.
+Run the script as your normal user, never with `sudo`. Configure rootless Docker/Podman or grant
+your user access to Docker; using `sudo` would create root-owned .NET build outputs. The script
+detects and quarantines build outputs owned by another user before building.
 
 ```bash
 dotnet restore Mastemis.sln

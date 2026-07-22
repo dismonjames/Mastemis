@@ -17,6 +17,14 @@ server_url="https://localhost:${server_https_port}"
 no_ui=false
 reset=false
 
+if [[ "$EUID" -eq 0 ]]; then
+  printf '%s\n' \
+    'Do not run this script with sudo.' \
+    'Running dotnet as root creates root-owned bin/obj files and breaks later builds.' \
+    'Configure rootless Docker/Podman or add your user to the docker group, then run normally.' >&2
+  exit 7
+fi
+
 usage() {
   printf '%s\n' \
     'Usage: ./scripts/dev-full.sh [--no-ui] [--reset]' \
@@ -58,6 +66,23 @@ fi
 
 mkdir -p "$state_dir" "$log_dir"
 chmod 700 "$state_dir" "$log_dir"
+
+quarantine_unowned_build_tree() {
+  local path="$1"
+  local label="$2"
+  local unowned
+  [[ -e "$path" ]] || return 0
+  unowned="$(find "$path" -xdev ! -user "$(id -u)" -print -quit 2>/dev/null || true)"
+  [[ -n "$unowned" ]] || return 0
+  local quarantine_dir="$state_dir/quarantine"
+  local destination="$quarantine_dir/${label}-$(date -u +%Y%m%dT%H%M%SZ)"
+  mkdir -p "$quarantine_dir"
+  printf 'Build output contains files not owned by %s; moving %s to %s\n' "$(id -un)" "$path" "$destination"
+  mv -- "$path" "$destination"
+}
+
+quarantine_unowned_build_tree "$repo_root/src/Client/bin" 'client-bin'
+quarantine_unowned_build_tree "$repo_root/src/Client/obj" 'client-obj'
 
 random_secret() {
   openssl rand -hex 18
