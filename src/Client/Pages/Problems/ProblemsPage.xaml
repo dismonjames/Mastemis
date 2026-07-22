@@ -15,10 +15,10 @@
         <Border Grid.Row="2" Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
             <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                 <Grid Padding="16,12" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1"><Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="Title" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="Locale" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="Checker" FontWeight="SemiBold"/><TextBlock Grid.Column="3" Text="Revision" FontWeight="SemiBold"/>
+                    <TextBlock Text="Title" FontWeight="SemiBold"/><TextBlock Grid.Column="1" Text="Status" FontWeight="SemiBold"/><TextBlock Grid.Column="2" Text="Difficulty" FontWeight="SemiBold"/><TextBlock Grid.Column="3" Text="Permission" FontWeight="SemiBold"/>
                 </Grid>
                 <ListView Grid.Row="1" ItemsSource="{Binding VisibleProblems}" AutomationProperties.Name="Authorized problem drafts">
-                    <ListView.ItemTemplate><DataTemplate><Grid Padding="8,7"><Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Title}"/><TextBlock Grid.Column="1" Text="{Binding DefaultLocale}"/><TextBlock Grid.Column="2" Text="{Binding Checker}"/><TextBlock Grid.Column="3" Text="{Binding Version}"/></Grid></DataTemplate></ListView.ItemTemplate>
+                    <ListView.ItemTemplate><DataTemplate><Grid Padding="8,7"><Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Title}"/><TextBlock Grid.Column="1" Text="{Binding Status}"/><TextBlock Grid.Column="2" Text="{Binding Difficulty}"/><TextBlock Grid.Column="3" Text="{Binding Permission}"/></Grid></DataTemplate></ListView.ItemTemplate>
                 </ListView>
                 <controls:EmptyState Grid.Row="1" Visibility="{Binding IsEmpty, Converter={StaticResource BooleanToVisibilityConverter}}" Title="No authorized drafts" Message="Create a draft or ask an owner to assign you to a problem." Glyph="&#xE8A5;"/>
             </Grid>

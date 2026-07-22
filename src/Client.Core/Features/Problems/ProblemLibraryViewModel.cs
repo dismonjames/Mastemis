@@ -10,19 +10,21 @@ namespace Mastemis.Client.Core.Features.Problems;
 public sealed class ProblemLibraryViewModel : ObservableObject
 {
     private readonly IProblemDraftClient client;
+    private readonly IProblemLibraryClient library;
     private string search = string.Empty;
     private bool isBusy;
     private string? error;
 
-    public ProblemLibraryViewModel(IProblemDraftClient client)
+    public ProblemLibraryViewModel(IProblemDraftClient client, IProblemLibraryClient library)
     {
         this.client = client;
+        this.library = library;
         RefreshCommand = new AsyncCommand(RefreshAsync);
         CreateCommand = new AsyncCommand(CreateAsync);
     }
 
-    public ObservableCollection<ProblemDraftSummary> Problems { get; } = [];
-    public ObservableCollection<ProblemDraftSummary> VisibleProblems { get; } = [];
+    public ObservableCollection<ProblemLibraryItem> Problems { get; } = [];
+    public ObservableCollection<ProblemLibraryItem> VisibleProblems { get; } = [];
     public ICommand RefreshCommand { get; }
     public ICommand CreateCommand { get; }
     public string NewTitle { get; set; } = string.Empty;
@@ -34,9 +36,9 @@ public sealed class ProblemLibraryViewModel : ObservableObject
 
     private async Task RefreshAsync(CancellationToken cancellationToken) => await RunAsync(async () =>
     {
-        var values = await client.ListAsync(cancellationToken).ConfigureAwait(true);
+        var values = await library.SearchAsync(Search, cancellationToken).ConfigureAwait(true);
         Problems.Clear();
-        foreach (var value in values) Problems.Add(value);
+        foreach (var value in values?.Items ?? []) Problems.Add(value);
         ApplyFilter();
     }).ConfigureAwait(true);
 
