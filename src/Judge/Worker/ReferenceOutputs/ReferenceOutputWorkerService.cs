@@ -1,13 +1,15 @@
 using Mastemis.Contracts.Judge;
 using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Judge.Configuration;
+using Mastemis.Judge.Worker.Capacity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Mastemis.Judge.Worker.ReferenceOutputs;
 
 public sealed class ReferenceOutputWorkerService(IReferenceOutputServerClient server, ReferenceOutputExecutor executor,
-    JudgeWorkerOptions options, ILogger<ReferenceOutputWorkerService> logger) : BackgroundService
+    JudgeWorkerOptions options, WorkerCapacityCoordinator capacity,
+    ILogger<ReferenceOutputWorkerService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -15,6 +17,7 @@ public sealed class ReferenceOutputWorkerService(IReferenceOutputServerClient se
         {
             try
             {
+                using var slot = await capacity.AcquireReferenceOutputAsync(stoppingToken);
                 var lease = await server.ClaimAsync((int)options.LeaseDuration.TotalSeconds, stoppingToken);
                 if (lease is null) { await Task.Delay(options.ClaimInterval, stoppingToken); continue; }
                 await ExecuteLeaseAsync(lease, stoppingToken);

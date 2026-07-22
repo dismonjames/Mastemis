@@ -2,6 +2,7 @@ using Mastemis.Contracts.Judge;
 using Mastemis.Domain;
 using Mastemis.Judge.Configuration;
 using Mastemis.Judge.Execution;
+using Mastemis.Judge.Worker.Capacity;
 using Mastemis.Sandbox.Abstractions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ namespace Mastemis.Judge.Worker;
 
 public sealed class JudgeWorkerService(IJudgeServerClient server, IJudgementOrchestrator orchestrator,
     ISandboxCapabilityProbe sandboxProbe, JudgeWorkerOptions options, JudgeWorkerHealthState health,
-    ILogger<JudgeWorkerService> logger) : BackgroundService
+    WorkerCapacityCoordinator capacity, ILogger<JudgeWorkerService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -36,21 +37,23 @@ public sealed class JudgeWorkerService(IJudgeServerClient server, IJudgementOrch
             active.RemoveWhere(task => task.IsCompleted);
             if (DateTimeOffset.UtcNow >= nextHeartbeat)
             {
-                await HeartbeatAsync(active.Count, stoppingToken); nextHeartbeat = DateTimeOffset.UtcNow + options.HeartbeatInterval;
+                await HeartbeatAsync(capacity.Active, stoppingToken); nextHeartbeat = DateTimeOffset.UtcNow + options.HeartbeatInterval;
             }
-            while (active.Count < options.Capacity)
+            while (true)
             {
+                var slot = capacity.TryAcquireSubmission();
+                if (slot is null) break;
                 var lease = await server.ClaimAsync((int)options.LeaseDuration.TotalSeconds, stoppingToken);
-                if (lease is null) break;
-                var task = ProcessLeaseAsync(lease, stoppingToken); active.Add(task);
+                if (lease is null) { slot.Dispose(); break; }
+                var task = ProcessLeaseAsync(lease, slot, stoppingToken); active.Add(task);
             }
-            health.Update(state => state with { ActiveJobs = active.Count });
+            health.Update(state => state with { ActiveJobs = capacity.Active });
             await Task.Delay(options.ClaimInterval, stoppingToken);
         }
         await DrainAsync(active);
     }
 
-    private async Task ProcessLeaseAsync(WorkerLeaseContract lease, CancellationToken stoppingToken)
+    private async Task ProcessLeaseAsync(WorkerLeaseContract lease, WorkerCapacityLease slot, CancellationToken stoppingToken)
     {
         using var execution = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
         var renewal = RenewLeaseAsync(lease, execution.Token);
@@ -94,6 +97,7 @@ public sealed class JudgeWorkerService(IJudgeServerClient server, IJudgementOrch
             catch (OperationCanceledException) { }
             catch (Exception exception) when (exception is JudgeServerException or HttpRequestException)
             { logger.LogWarning("Lease renewal stopped after a server communication failure."); }
+            slot.Dispose();
         }
     }
 

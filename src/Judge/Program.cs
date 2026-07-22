@@ -6,6 +6,7 @@ using Mastemis.Judge.Languages;
 using Mastemis.Judge.Languages.Cpp;
 using Mastemis.Judge.Languages.CSharp;
 using Mastemis.Judge.Worker;
+using Mastemis.Judge.Worker.Capacity;
 using Mastemis.Judge.Worker.ReferenceOutputs;
 using Mastemis.Judge.Workspaces;
 using Mastemis.Sandbox.Abstractions;
@@ -53,6 +54,7 @@ if (args.Contains("--probe", StringComparer.Ordinal))
     return;
 }
 builder.Services.AddSingleton(workerOptions); builder.Services.AddSingleton(sandboxOptions);
+builder.Services.AddSingleton(new WorkerCapacityCoordinator(workerOptions.Capacity));
 builder.Services.AddSingleton<JudgeWorkerHealthState>(); builder.Services.AddSingleton<IJudgeClock, SystemJudgeClock>();
 builder.Services.AddSingleton<IJudgeWorkspaceManager>(_ => new JudgeWorkspaceManager(workspace));
 builder.Services.AddSingleton<ISandboxCapabilityProbe, OciSandboxCapabilityProbe>(); builder.Services.AddSingleton<ISandboxRunner, OciSandboxRunner>();
