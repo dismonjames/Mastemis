@@ -6,6 +6,18 @@ Mastemis is an open-source, self-hosted programming examination and judging plat
 
 Requirements: .NET SDK selected by `global.json`. PostgreSQL is optional for liveness and required for a durable production deployment.
 
+For a complete local development environment with PostgreSQL, migrations, a generated administrator,
+verified HTTPS login, the API server, and Uno Desktop, run:
+
+```bash
+./scripts/dev-full.sh
+```
+
+The script prints the server URL, generated test credentials, health/OpenAPI URLs, version response,
+and log location. Credentials and TLS material are generated under the gitignored `.mastemis-dev/`
+directory with restrictive permissions. Use `./scripts/dev-full.sh --reset` to move an existing local
+database aside and start clean, or `--no-ui` to run only PostgreSQL and the server.
+
 ```bash
 dotnet restore Mastemis.sln
 dotnet build Mastemis.sln

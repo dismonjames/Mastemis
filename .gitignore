@@ -27,3 +27,4 @@ screenshots/
 *.tmp
 TestResults/
 coverage/
+.mastemis-dev/
