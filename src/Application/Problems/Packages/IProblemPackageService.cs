@@ -11,4 +11,6 @@ public interface IProblemPackageService
     Task<ProblemPackageValidation> ValidateAsync(Stream package, CancellationToken cancellationToken);
     Task<ProblemPackageExport> ExportAsync(Guid problemId, CancellationToken cancellationToken);
     Task<ProblemPackageImport> CreateNewAsync(Stream package, string idempotencyKey, CancellationToken cancellationToken);
+    Task<ProblemPackageImport> ReplaceDraftAsync(Guid problemId, int expectedVersion, Stream package,
+        string idempotencyKey, CancellationToken cancellationToken);
 }

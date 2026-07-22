@@ -122,6 +122,7 @@ if (durableMode)
     builder.Services.AddScoped<IProblemTestQueryService, PostgresProblemTestQueryService>();
     builder.Services.AddScoped<IProblemPackageService, PostgresProblemPackageService>();
     builder.Services.AddScoped<PostgresProblemPackageImporter>();
+    builder.Services.AddScoped<PostgresProblemPackageReplacer>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemObjectReconciler>();

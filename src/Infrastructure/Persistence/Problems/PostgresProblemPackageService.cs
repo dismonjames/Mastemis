@@ -16,7 +16,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Mastemis.Infrastructure.Persistence.Problems;
 
 public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblemObjectStorage objects,
-    IAuthorizationService authorization, PostgresProblemPackageImporter importer) : IProblemPackageService
+    IAuthorizationService authorization, PostgresProblemPackageImporter importer,
+    PostgresProblemPackageReplacer replacer) : IProblemPackageService
 {
     private static readonly PackageArchiveLimits Limits = new();
     public async Task<ProblemPackageValidation> ValidateAsync(Stream package, CancellationToken cancellationToken)
@@ -79,6 +80,10 @@ public sealed class PostgresProblemPackageService(MastemisDbContext db, IProblem
 
     public Task<ProblemPackageImport> CreateNewAsync(Stream package, string idempotencyKey, CancellationToken cancellationToken) =>
         importer.CreateNewAsync(package, idempotencyKey, cancellationToken);
+
+    public Task<ProblemPackageImport> ReplaceDraftAsync(Guid problemId, int expectedVersion, Stream package,
+        string idempotencyKey, CancellationToken cancellationToken) =>
+        replacer.ReplaceAsync(problemId, expectedVersion, package, idempotencyKey, cancellationToken);
 
     private async Task<byte[]> ReadAsync(string objectId, long length, CancellationToken cancellationToken)
     { await using var stream = await objects.OpenReadAsync(objectId, length, cancellationToken); using var output = new MemoryStream(); await stream.CopyToAsync(output, cancellationToken); return output.ToArray(); }

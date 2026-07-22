@@ -13,6 +13,12 @@ public static class ProblemPackageEndpoints
             if (!request.Headers.TryGetValue("Idempotency-Key", out var key)) return Results.BadRequest();
             return Results.Created("/api/problem-studio/drafts", await packages.CreateNewAsync(request.Body, key.ToString(), ct));
         });
+        group.MapPut("/drafts/{problemId:guid}/packages/import", async (Guid problemId, int expectedVersion,
+            HttpRequest request, IProblemPackageService packages, CancellationToken ct) =>
+        {
+            if (!request.Headers.TryGetValue("Idempotency-Key", out var key)) return Results.BadRequest();
+            return Results.Ok(await packages.ReplaceDraftAsync(problemId, expectedVersion, request.Body, key.ToString(), ct));
+        });
         group.MapGet("/drafts/{problemId:guid}/packages/export", async (Guid problemId, IProblemPackageService packages, CancellationToken ct) =>
         { var package = await packages.ExportAsync(problemId, ct); return Results.Stream(package.Content, "application/vnd.mastemis.problem+zip", $"{problemId:N}.mas"); });
         return group;
