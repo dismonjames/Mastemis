@@ -14,9 +14,11 @@ public sealed class CandidateOperationsViewModel : ObservableObject
     private string registrationCode = string.Empty;
     private bool isBusy;
     private string? error;
-    public CandidateOperationsViewModel(ICandidateClient client) { this.client = client; RegisterCommand = new AsyncCommand(RegisterAsync); }
+    public CandidateOperationsViewModel(ICandidateClient client) { this.client = client; RegisterCommand = new AsyncCommand(RegisterAsync); RefreshCommand = new AsyncCommand(RefreshAsync); }
     public ICommand RegisterCommand { get; }
+    public ICommand RefreshCommand { get; }
     public ObservableCollection<CandidateRegistration> Registrations { get; } = [];
+    public ObservableCollection<CandidateListItem> Candidates { get; } = [];
     public string ExamId { get => examId; set => SetProperty(ref examId, value); }
     public string UserId { get => userId; set => SetProperty(ref userId, value); }
     public string RegistrationCode { get => registrationCode; set => SetProperty(ref registrationCode, value); }
@@ -24,6 +26,13 @@ public sealed class CandidateOperationsViewModel : ObservableObject
     public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } }
     public bool HasError => Error is not null;
     public bool HasRegistrations => Registrations.Count > 0;
+    public bool HasCandidates => Candidates.Count > 0;
+    private async Task RefreshAsync(CancellationToken cancellationToken)
+    {
+        Error = null; if (!Guid.TryParse(ExamId, out var exam)) { Error = "Enter a valid examination ID."; return; }
+        IsBusy = true; try { var page = await client.ListAsync(exam, null, cancellationToken).ConfigureAwait(true); Candidates.Clear(); foreach (var item in page?.Items ?? []) Candidates.Add(item); OnPropertyChanged(nameof(HasCandidates)); }
+        catch (ApiException value) { Error = value.Problem.Title; } finally { IsBusy = false; }
+    }
     private async Task RegisterAsync(CancellationToken cancellationToken)
     {
         Error = null;
