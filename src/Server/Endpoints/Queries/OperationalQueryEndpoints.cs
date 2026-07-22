@@ -10,5 +10,6 @@ public static class OperationalQueryEndpoints
         group.MapRoomCandidateQueryEndpoints();
         group.MapWorkerQueryEndpoints();
         group.MapInvigilationQueryEndpoints();
+        group.MapProblemLibraryQueryEndpoints();
     }
 }
