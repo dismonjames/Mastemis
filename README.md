@@ -43,7 +43,9 @@ Judge claims use PostgreSQL row locks with `FOR UPDATE SKIP LOCKED`, unpredictab
 
 Source objects are atomically renamed before their metadata transaction commits. A hosted reconciler scans a bounded batch of old generated objects, verifies references in PostgreSQL first, and removes only stale unreferenced objects. Configure `Storage__OrphanAgeMinutes`, `Storage__ReconciliationIntervalMinutes`, and `Storage__ReconciliationBatchSize`; recent objects and all referenced objects are retained.
 
-The API process never compiles or runs candidate code. Build the versioned Podman image and operate `src/Judge` on a dedicated Linux worker as described in [judge worker architecture](docs/architecture/judge-worker.md). The worker refuses jobs unless the configured image is already local and mandatory network, filesystem, privilege, memory, process, and cgroup controls pass. There is no unsandboxed fallback. Test inputs and expected outputs use generated objects beneath `Judge__DataPath`; problem-package authoring/import remains a later subsystem.
+The API process never compiles or runs candidate code. Build the versioned Podman image and operate `src/Judge` on a dedicated Linux worker as described in [judge worker architecture](docs/architecture/judge-worker.md). The worker refuses jobs unless the configured image is already local and mandatory network, filesystem, privilege, memory, process, and cgroup controls pass. There is no unsandboxed fallback.
+
+Durable Problem Studio support includes PostgreSQL drafts, MAS source and generation operations, staged test-input object storage, deterministic input publication, and authenticated endpoints under `/api/problem-studio`. Reference-output jobs, persisted package import/export, author assignment, and hidden-test retrieval are not complete; input-only generated sets are not complete judge data for checkers requiring expected output. See [problem authoring](docs/architecture/problem-authoring.md).
 
 ## Privacy
 
