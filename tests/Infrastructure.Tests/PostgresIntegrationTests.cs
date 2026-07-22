@@ -43,7 +43,8 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
         while (await reader.ReadAsync(TestContext.Current.CancellationToken)) tables.Add(reader.GetString(0));
         foreach (var table in new[] { "exams", "exam_rooms", "candidates", "candidate_registrations", "exam_sessions",
             "source_revisions", "submissions", "judgements", "sfe_events", "sfe_evaluations", "confirmed_warnings",
-            "judge_workers", "worker_credentials", "judge_jobs", "idempotency_records", "outbox_messages", "audit_records", "termination_metadata" })
+            "judge_workers", "worker_credentials", "judge_jobs", "idempotency_records", "outbox_messages", "audit_records", "termination_metadata",
+            "evidence_packages", "evidence_items", "evidence_review_grants" })
             Assert.Contains(table, tables);
     }
 
