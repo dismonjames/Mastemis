@@ -1,5 +1,6 @@
 using Mastemis.Application;
 using Mastemis.Infrastructure.Persistence;
+using Mastemis.Infrastructure.Persistence.Outbox;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;

@@ -8,6 +8,7 @@ using Mastemis.Infrastructure;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
+using Mastemis.Infrastructure.Persistence.Outbox;
 using Mastemis.Server.Authorization;
 using Mastemis.Server.Endpoints.Administration;
 using Mastemis.Server.Endpoints.Auth;
@@ -81,6 +82,8 @@ if (durableMode)
     builder.Services.AddScoped<Mastemis.Application.IAuthorizationService, ProductionApplicationAuthorization>();
     builder.Services.AddSingleton<OutboxStatus>();
     builder.Services.AddSingleton<IOutboxPublisher, SignalROutboxPublisher>();
+    builder.Services.AddScoped<IOutboxDeliveryStore, PostgresOutboxDeliveryStore>();
+    builder.Services.AddScoped<OutboxBatchProcessor>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHealthChecks()
