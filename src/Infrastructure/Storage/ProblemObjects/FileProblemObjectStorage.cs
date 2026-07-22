@@ -55,9 +55,16 @@ public sealed class FileProblemObjectStorage(string rootPath, IClock clock) : IP
     }
 
     public Task<Stream> OpenReadAsync(string objectId, long maximumBytes, CancellationToken cancellationToken)
+        => OpenAsync(objectId, maximumBytes, staged: false, cancellationToken);
+
+    public Task<Stream> OpenStagedReadAsync(string objectId, long maximumBytes, CancellationToken cancellationToken)
+        => OpenAsync(objectId, maximumBytes, staged: true, cancellationToken);
+
+    private Task<Stream> OpenAsync(string objectId, long maximumBytes, bool staged, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var path = ProblemObjectPath.Resolve(_root, objectId, false);
+        if (maximumBytes < 0) throw new ApplicationFailure(ErrorCodes.InvalidInput, "Object read limit is invalid.");
+        var path = ProblemObjectPath.Resolve(_root, objectId, staged);
         if (!File.Exists(path)) throw new ApplicationFailure(ErrorCodes.NotFound, "Problem object was not found.");
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous);
         if (stream.Length > maximumBytes) { stream.Dispose(); throw new ApplicationFailure(ErrorCodes.InvalidInput, "Object exceeds its read limit."); }

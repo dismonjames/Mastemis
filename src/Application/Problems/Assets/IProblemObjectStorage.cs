@@ -22,6 +22,8 @@ public interface IProblemObjectStorage
 
     Task<Stream> OpenReadAsync(string objectId, long maximumBytes, CancellationToken cancellationToken);
 
+    Task<Stream> OpenStagedReadAsync(string objectId, long maximumBytes, CancellationToken cancellationToken);
+
     Task DeleteStagedAsync(string objectId, CancellationToken cancellationToken);
     Task DeleteReferencedAsync(string objectId, CancellationToken cancellationToken);
 }

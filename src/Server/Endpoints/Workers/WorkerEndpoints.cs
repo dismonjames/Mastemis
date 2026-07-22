@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using Mastemis.Application;
 using Mastemis.Contracts.Judge;
+using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 using Mastemis.Infrastructure.Persistence;
+using Mastemis.Infrastructure.Persistence.Problems;
 using Mastemis.Infrastructure.Persistence.Queue;
 
 namespace Mastemis.Server.Endpoints.Workers;
@@ -49,6 +51,41 @@ public static class WorkerEndpoints
             return Results.NoContent();
         });
         workers.MapPost("/jobs/{jobId:guid}/fail", async (Guid jobId, ClaimsPrincipal principal, WorkerFailureReport request, IWorkerJudgeQueue queue, CancellationToken ct) => { await queue.FailAsync(CurrentWorker(principal), new(jobId), request.LeaseId, SafeCode(request.FailureCode) ?? "worker.infrastructure", ct); return Results.NoContent(); });
+        workers.MapPost("/reference-jobs/claim", async (ClaimsPrincipal principal, ClaimJobRequest request, IReferenceOutputQueue queue, CancellationToken ct) =>
+        { var lease = await queue.ClaimAsync(CurrentWorker(principal), TimeSpan.FromSeconds(request.LeaseSeconds), ct); return lease is null ? Results.NoContent() : Results.Ok(lease); });
+        workers.MapGet("/reference-jobs/{jobId:guid}/contract", async (Guid jobId, Guid leaseToken, ClaimsPrincipal principal,
+            ReferenceOutputPayloadService payloads, CancellationToken ct) => Results.Ok(await payloads.GetAsync(CurrentWorker(principal), jobId, leaseToken, ct)));
+        workers.MapGet("/reference-jobs/{jobId:guid}/sources/{fileName}", async (Guid jobId, string fileName, Guid leaseToken,
+            ClaimsPrincipal principal, ReferenceOutputPayloadService payloads, CancellationToken ct) =>
+            Results.Stream(await payloads.OpenSourceAsync(CurrentWorker(principal), jobId, leaseToken, fileName, ct), "application/octet-stream"));
+        workers.MapGet("/reference-jobs/{jobId:guid}/tests/{testIndex:int}/input", async (Guid jobId, int testIndex, Guid leaseToken,
+            ClaimsPrincipal principal, ReferenceOutputPayloadService payloads, CancellationToken ct) =>
+            Results.Stream(await payloads.OpenInputAsync(CurrentWorker(principal), jobId, leaseToken, testIndex, ct), "application/octet-stream"));
+        workers.MapPost("/reference-jobs/{jobId:guid}/renew", async (Guid jobId, ClaimsPrincipal principal, ReferenceLeaseRequest request,
+            IReferenceOutputQueue queue, CancellationToken ct) =>
+        { await queue.RenewAsync(CurrentWorker(principal), jobId, request.LeaseToken, TimeSpan.FromSeconds(request.LeaseSeconds), ct); return Results.NoContent(); });
+        workers.MapPost("/reference-jobs/{jobId:guid}/start", async (Guid jobId, ClaimsPrincipal principal, ReferenceLeaseRequest request,
+            IReferenceOutputQueue queue, CancellationToken ct) =>
+        { await queue.StartAsync(CurrentWorker(principal), jobId, request.LeaseToken, ct); return Results.NoContent(); });
+        workers.MapPost("/reference-jobs/{jobId:guid}/tests/{testIndex:int}/output", async (Guid jobId, int testIndex,
+            ClaimsPrincipal principal, ReferenceOutputUploadRequest request, HttpRequest http, ReferenceOutputIngestionService ingestion, CancellationToken ct) =>
+        {
+            await ingestion.IngestAsync(CurrentWorker(principal), jobId, new(request.OperationId, request.LeaseToken, request.ContractVersion,
+            testIndex, request.Sha256, request.Length, request.ExecutionMilliseconds, request.PeakMemoryBytes, request.SandboxBackend,
+            request.JudgeVersion, request.Status, request.FailureCode), http.Body, ct); return Results.NoContent();
+        });
+        workers.MapPost("/reference-jobs/{jobId:guid}/complete", async (Guid jobId, ClaimsPrincipal principal, ReferenceOutputCompletionRequest request,
+            IReferenceOutputQueue queue, CancellationToken ct) =>
+        {
+            var worker = CurrentWorker(principal); await queue.CompleteAsync(new(jobId,
+            request.OperationId, worker, request.LeaseToken, request.CompletedTests, request.JudgeVersion, request.SandboxBackend), ct); return Results.NoContent();
+        });
+        workers.MapPost("/reference-jobs/{jobId:guid}/fail", async (Guid jobId, ClaimsPrincipal principal, ReferenceOutputFailureRequest request,
+            IReferenceOutputQueue queue, CancellationToken ct) =>
+        {
+            var worker = CurrentWorker(principal); await queue.FailAsync(new(jobId,
+            request.OperationId, worker, request.LeaseToken, SafeCode(request.FailureCode) ?? "reference.infrastructure", SafeText(request.DiagnosticSummary ?? "reference failure", 1024)), ct); return Results.NoContent();
+        });
     }
     private static JudgeWorkerId CurrentWorker(ClaimsPrincipal principal) => new(Guid.Parse(principal.FindFirst("worker_id")!.Value));
     private static string SafeText(string value, int maximumLength) => string.IsNullOrWhiteSpace(value) || value.Length > maximumLength
@@ -66,3 +103,9 @@ public sealed record RegisterWorkerRequest(string Name, int Capacity, DateTimeOf
 public sealed record RotateWorkerRequest(DateTimeOffset? ExpiresAtUtc);
 public sealed record ClaimJobRequest(int LeaseSeconds);
 public sealed record LeaseRequest(Guid LeaseId, int LeaseSeconds);
+public sealed record ReferenceLeaseRequest(Guid LeaseToken, int LeaseSeconds);
+public sealed record ReferenceOutputUploadRequest(Guid OperationId, Guid LeaseToken, int ContractVersion, string Sha256,
+    long Length, long ExecutionMilliseconds, long? PeakMemoryBytes, string SandboxBackend, string JudgeVersion,
+    ReferenceOutputResultStatus Status, string? FailureCode);
+public sealed record ReferenceOutputCompletionRequest(Guid OperationId, Guid LeaseToken, int CompletedTests, string JudgeVersion, string SandboxBackend);
+public sealed record ReferenceOutputFailureRequest(Guid OperationId, Guid LeaseToken, string FailureCode, string? DiagnosticSummary);

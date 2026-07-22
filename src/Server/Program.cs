@@ -121,6 +121,8 @@ if (durableMode)
     builder.Services.AddScoped<IReferenceOutputQueue, PostgresReferenceOutputQueue>();
     builder.Services.AddScoped<IReferenceSolutionStore, PostgresReferenceSolutionStore>();
     builder.Services.AddScoped<ReferenceSolutionService>();
+    builder.Services.AddScoped<ReferenceOutputPayloadService>();
+    builder.Services.AddScoped<ReferenceOutputIngestionService>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();
