@@ -7,8 +7,10 @@ using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Authorization;
 using Mastemis.Application.Problems.Generation;
+using Mastemis.Application.Problems.Packages;
 using Mastemis.Application.Problems.ReferenceOutputs;
 using Mastemis.Application.Problems.Statements;
+using Mastemis.Application.Problems.TestSets;
 using Mastemis.Contracts.Problems.ReferenceOutputs;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
@@ -119,6 +121,7 @@ if (durableMode)
     builder.Services.AddScoped<IProblemTestSetPublisher, PostgresProblemTestSetPublisher>();
     builder.Services.AddScoped<IProblemTestQueryService, PostgresProblemTestQueryService>();
     builder.Services.AddScoped<IProblemPackageService, PostgresProblemPackageService>();
+    builder.Services.AddScoped<PostgresProblemPackageImporter>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemObjectReconciler>();
