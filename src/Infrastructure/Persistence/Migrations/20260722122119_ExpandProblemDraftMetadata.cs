@@ -15,14 +15,14 @@ public partial class ExpandProblemDraftMetadata : Migration
             table: "problem_drafts",
             type: "jsonb",
             nullable: false,
-            defaultValue: "");
+            defaultValue: "[\"cpp\",\"csharp\"]");
 
         migrationBuilder.AddColumn<string>(
             name: "AuthorsJson",
             table: "problem_drafts",
             type: "jsonb",
             nullable: false,
-            defaultValue: "");
+            defaultValue: "[]");
 
         migrationBuilder.AddColumn<string>(
             name: "Difficulty",
@@ -30,14 +30,14 @@ public partial class ExpandProblemDraftMetadata : Migration
             type: "character varying(32)",
             maxLength: 32,
             nullable: false,
-            defaultValue: "");
+            defaultValue: "unspecified");
 
         migrationBuilder.AddColumn<string>(
             name: "TagsJson",
             table: "problem_drafts",
             type: "jsonb",
             nullable: false,
-            defaultValue: "");
+            defaultValue: "[]");
     }
 
     /// <inheritdoc />

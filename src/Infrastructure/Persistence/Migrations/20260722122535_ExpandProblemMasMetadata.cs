@@ -24,7 +24,7 @@ public partial class ExpandProblemMasMetadata : Migration
             type: "character varying(100)",
             maxLength: 100,
             nullable: false,
-            defaultValue: "");
+            defaultValue: "mas-runtime-1.0");
 
         migrationBuilder.AddColumn<DateTimeOffset>(
             name: "MasValidatedAtUtc",
@@ -37,7 +37,7 @@ public partial class ExpandProblemMasMetadata : Migration
             table: "problem_drafts",
             type: "jsonb",
             nullable: false,
-            defaultValue: "");
+            defaultValue: "[]");
     }
 
     /// <inheritdoc />
