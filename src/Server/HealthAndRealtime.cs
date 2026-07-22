@@ -1,6 +1,7 @@
 using Mastemis.Application;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Outbox;
+using Mastemis.Infrastructure.Storage.ProblemObjects;
 using Mastemis.Infrastructure.Storage.Reconciliation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -88,6 +89,27 @@ public sealed class SourceReconciliationHealthCheck(SourceReconciliationStatus s
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(status.Failed ? HealthCheckResult.Degraded("The latest source reconciliation pass failed; cleanup is suspended until database verification succeeds.")
             : HealthCheckResult.Healthy(status.LastSuccessUtc is null ? "Source reconciliation is configured and awaiting its first pass." : "Source reconciliation completed successfully."));
+    }
+}
+
+public sealed class ProblemObjectReconciliationHealthCheck(ProblemObjectReconciliationStatus status) : IHealthCheck
+{
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default) =>
+        Task.FromResult(status.Failed
+            ? HealthCheckResult.Degraded("Problem object reconciliation failed; destructive cleanup is suspended.")
+            : HealthCheckResult.Healthy(status.LastSuccessUtc is null
+                ? "Problem object reconciliation is awaiting its first pass."
+                : "Problem object reconciliation completed successfully."));
+}
+
+public sealed class ReferenceOutputQueueHealthCheck(IServiceScopeFactory scopes) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MastemisDbContext>();
+        _ = await db.ReferenceOutputJobs.AsNoTracking().CountAsync(cancellationToken);
+        return HealthCheckResult.Healthy("Reference output queue is queryable.");
     }
 }
 

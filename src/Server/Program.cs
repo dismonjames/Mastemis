@@ -60,6 +60,10 @@ var reconciliationOptions = new SourceReconciliationOptions(storageRoot,
     int.TryParse(builder.Configuration["Storage:ReconciliationBatchSize"], out var batchSize) ? batchSize : 100);
 builder.Services.AddSingleton(reconciliationOptions);
 builder.Services.AddSingleton<SourceReconciliationStatus>();
+var problemReconciliationOptions = new ProblemObjectReconciliationOptions(storageRoot, reconciliationOptions.OrphanAge,
+    reconciliationOptions.ScanInterval, reconciliationOptions.BatchSize);
+builder.Services.AddSingleton(problemReconciliationOptions);
+builder.Services.AddSingleton<ProblemObjectReconciliationStatus>();
 var durableMode = !string.IsNullOrWhiteSpace(connectionString);
 if (durableMode)
 {
@@ -116,6 +120,7 @@ if (durableMode)
     builder.Services.AddScoped<IProblemTestQueryService, PostgresProblemTestQueryService>();
     builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
+    builder.Services.AddScoped<ProblemObjectReconciler>();
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
     builder.Services.AddScoped<ProblemStatementService>();
@@ -129,11 +134,15 @@ if (durableMode)
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
     builder.Services.AddHostedService<SourceObjectReconciliationService>();
+    builder.Services.AddHostedService<ProblemObjectReconciliationService>();
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseSchemaHealthCheck>("database_schema", tags: ["ready"])
         .AddCheck<OutboxHealthCheck>("outbox_dispatcher", tags: ["ready"])
         .AddCheck<JudgeQueueHealthCheck>("judge_queue", tags: ["ready"]);
     builder.Services.AddHealthChecks().AddCheck<SourceReconciliationHealthCheck>("source_reconciliation", tags: ["ready"]);
+    builder.Services.AddHealthChecks()
+        .AddCheck<ProblemObjectReconciliationHealthCheck>("problem_object_reconciliation", tags: ["ready"])
+        .AddCheck<ReferenceOutputQueueHealthCheck>("reference_output_queue", tags: ["ready"]);
 }
 else
 {
