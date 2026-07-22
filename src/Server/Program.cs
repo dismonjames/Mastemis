@@ -5,6 +5,7 @@ using Mastemis.Application.Administration;
 using Mastemis.Application.Dashboard;
 using Mastemis.Application.Candidates.Queries;
 using Mastemis.Application.Examinations.Queries;
+using Mastemis.Application.Invigilation.Queries;
 using Mastemis.Application.Rooms.Queries;
 using Mastemis.Application.Workers.Queries;
 using Mastemis.Application.Evidence;
@@ -130,6 +131,8 @@ if (durableMode)
     builder.Services.AddScoped<CandidateQueryService>();
     builder.Services.AddScoped<IWorkerInventoryQueryStore, PostgresWorkerInventoryQueryStore>();
     builder.Services.AddScoped<WorkerInventoryQueryService>();
+    builder.Services.AddScoped<IInvigilationQueryStore, PostgresInvigilationQueryStore>();
+    builder.Services.AddScoped<InvigilationQueryService>();
     builder.Services.AddScoped<IScopeAdministration, ScopeAdministration>();
     builder.Services.AddScoped<IAdministrationActor, HttpAdministrationActor>();
     builder.Services.AddScoped<IEvidenceMetadataAccess, EvidenceMetadataAccess>();
