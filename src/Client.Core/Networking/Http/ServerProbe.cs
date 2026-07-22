@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 
 namespace Mastemis.Client.Core.Networking.Http;
 
-public sealed record ServerProbeResult(bool IsAvailable, bool IsReady, string? Version, string? Error);
+public sealed record ServerProbeResult(bool IsAvailable, bool IsReady, string? Version, string? Error, string? ErrorKind = null);
 
 public interface IServerProbe
 {
@@ -29,7 +29,10 @@ public sealed class ServerProbe(IHttpClientFactory clients) : IServerProbe
         }
         catch (Exception error) when (error is HttpRequestException or TaskCanceledException)
         {
-            return new(false, false, null, error is TaskCanceledException ? "Connection timed out." : "Server is unavailable.");
+            var tls = error is HttpRequestException && error.ToString().Contains("SSL", StringComparison.OrdinalIgnoreCase);
+            return new(false, false, null,
+                error is TaskCanceledException ? "Connection timed out." : tls ? "The server certificate could not be validated." : "Server is unavailable.",
+                tls ? "tls" : "network");
         }
     }
 }

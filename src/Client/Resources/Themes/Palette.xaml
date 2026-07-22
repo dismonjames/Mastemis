@@ -1,29 +1,49 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="MastemisCanvasBrush" Color="#F6F8FB" />
+            <SolidColorBrush x:Key="MastemisCanvasBrush" Color="#F4F6F9" />
+            <SolidColorBrush x:Key="MastemisNavigationBrush" Color="#F9FAFC" />
             <SolidColorBrush x:Key="MastemisSurfaceBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="MastemisElevatedSurfaceBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="MastemisSubtleBrush" Color="#EEF2F7" />
             <SolidColorBrush x:Key="MastemisBorderBrush" Color="#D7DEE8" />
+            <SolidColorBrush x:Key="MastemisStrongBorderBrush" Color="#AAB6C5" />
+            <SolidColorBrush x:Key="MastemisTextBrush" Color="#172033" />
             <SolidColorBrush x:Key="MastemisMutedTextBrush" Color="#526071" />
             <SolidColorBrush x:Key="MastemisAccentBrush" Color="#2563EB" />
+            <SolidColorBrush x:Key="MastemisAccentSubtleBrush" Color="#E8F0FF" />
             <SolidColorBrush x:Key="MastemisSuccessBrush" Color="#15803D" />
+            <SolidColorBrush x:Key="MastemisSuccessSurfaceBrush" Color="#EAF7EF" />
             <SolidColorBrush x:Key="MastemisWarningBrush" Color="#B45309" />
+            <SolidColorBrush x:Key="MastemisWarningSurfaceBrush" Color="#FFF7E7" />
             <SolidColorBrush x:Key="MastemisDangerBrush" Color="#B91C1C" />
+            <SolidColorBrush x:Key="MastemisDangerSurfaceBrush" Color="#FDEEEE" />
+            <SolidColorBrush x:Key="MastemisEditorBrush" Color="#FBFCFE" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="MastemisCanvasBrush" Color="#0B1220" />
+            <SolidColorBrush x:Key="MastemisNavigationBrush" Color="#0D1627" />
             <SolidColorBrush x:Key="MastemisSurfaceBrush" Color="#111B2E" />
+            <SolidColorBrush x:Key="MastemisElevatedSurfaceBrush" Color="#162238" />
             <SolidColorBrush x:Key="MastemisSubtleBrush" Color="#1A263B" />
             <SolidColorBrush x:Key="MastemisBorderBrush" Color="#334155" />
+            <SolidColorBrush x:Key="MastemisStrongBorderBrush" Color="#53657C" />
+            <SolidColorBrush x:Key="MastemisTextBrush" Color="#F2F5F9" />
             <SolidColorBrush x:Key="MastemisMutedTextBrush" Color="#A7B3C5" />
             <SolidColorBrush x:Key="MastemisAccentBrush" Color="#60A5FA" />
+            <SolidColorBrush x:Key="MastemisAccentSubtleBrush" Color="#172C4D" />
             <SolidColorBrush x:Key="MastemisSuccessBrush" Color="#4ADE80" />
+            <SolidColorBrush x:Key="MastemisSuccessSurfaceBrush" Color="#123022" />
             <SolidColorBrush x:Key="MastemisWarningBrush" Color="#FBBF24" />
+            <SolidColorBrush x:Key="MastemisWarningSurfaceBrush" Color="#352812" />
             <SolidColorBrush x:Key="MastemisDangerBrush" Color="#F87171" />
+            <SolidColorBrush x:Key="MastemisDangerSurfaceBrush" Color="#3A1C24" />
+            <SolidColorBrush x:Key="MastemisEditorBrush" Color="#0D1627" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <x:Double x:Key="MastemisRadiusSmall">4</x:Double>
     <x:Double x:Key="MastemisRadiusMedium">8</x:Double>
     <x:Double x:Key="MastemisRadiusLarge">12</x:Double>
+    <Thickness x:Key="MastemisPageMargin">28,24,28,32</Thickness>
+    <Thickness x:Key="MastemisCompactPageMargin">16,16,16,24</Thickness>
 </ResourceDictionary>

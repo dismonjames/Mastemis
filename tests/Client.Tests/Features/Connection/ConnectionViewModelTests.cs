@@ -23,7 +23,8 @@ public sealed class ConnectionViewModelTests
         var model = new ConnectionViewModel(new Probe(new(true, true, "1.0", null)), session, new ClientNavigator()) { ServerUrl = "https://example.test" };
         model.TestConnectionCommand.Execute(null);
         await WaitUntilAsync(() => model.StatusTitle is not null);
-        Assert.Equal("Connected", model.StatusTitle);
+        Assert.Equal("Server is ready", model.StatusTitle);
+        Assert.True(model.CanContinue);
         Assert.Equal(new Uri("https://example.test/"), session.ServerBaseUri);
     }
 
