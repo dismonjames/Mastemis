@@ -15,6 +15,10 @@ public sealed class ProblemDraftRow
     public string Checker { get; set; } = "exact";
     public string MasSource { get; set; } = string.Empty;
     public string MasSha256 { get; set; } = string.Empty;
+    public int MasRevision { get; set; }
+    public string MasValidationJson { get; set; } = "[]";
+    public DateTimeOffset? MasValidatedAtUtc { get; set; }
+    public string MasRuntimeVersion { get; set; } = "mas-runtime/1.0;prng=splitmix64-v1";
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset UpdatedAtUtc { get; set; }
     public Guid ConcurrencyToken { get; set; }

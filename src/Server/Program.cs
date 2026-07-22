@@ -8,6 +8,7 @@ using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Authorization;
 using Mastemis.Application.Problems.Drafts;
 using Mastemis.Application.Problems.Generation;
+using Mastemis.Application.Problems.Mas;
 using Mastemis.Application.Problems.Packages;
 using Mastemis.Application.Problems.ReferenceOutputs;
 using Mastemis.Application.Problems.Statements;
@@ -136,6 +137,8 @@ if (durableMode)
     builder.Services.AddScoped<ProblemObjectReconciler>();
     builder.Services.AddScoped<ProblemExportCleanupService>();
     builder.Services.AddScoped<ProblemStudioService>();
+    builder.Services.AddScoped<IProblemMasStore, PostgresProblemMasStore>();
+    builder.Services.AddScoped<ProblemMasService>();
     builder.Services.AddScoped<IProblemStatementStore, PostgresProblemStatementStore>();
     builder.Services.AddScoped<ProblemStatementService>();
     builder.Services.AddScoped<IProblemAssetStore, PostgresProblemAssetStore>();

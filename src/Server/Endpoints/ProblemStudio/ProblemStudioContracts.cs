@@ -5,7 +5,7 @@ using Mastemis.Application.Problems.Drafts;
 using Mastemis.Application.Problems.Statements;
 
 public sealed record CreateProblemDraftRequest(string Title, string DefaultLocale);
-public sealed record UpdateMasSourceRequest(string Source);
+public sealed record UpdateMasSourceRequest(string Source, int ExpectedRevision);
 public sealed record ValidateMasSourceRequest(string Source);
 public sealed record PreviewMasRequest(string Source, ulong Seed, int MaximumTests = 5);
 public sealed record StartGenerationRequest(ulong Seed);

@@ -12,6 +12,7 @@ internal sealed class ProblemDraftConfiguration : IEntityTypeConfiguration<Probl
         b.Property(x => x.Difficulty).HasMaxLength(32); b.Property(x => x.AcceptedLanguagesJson).HasColumnType("jsonb");
         b.Property(x => x.DefaultLocale).HasMaxLength(16); b.Property(x => x.Checker).HasMaxLength(32);
         b.Property(x => x.MasSource).HasColumnType("text"); b.Property(x => x.MasSha256).HasMaxLength(64);
+        b.Property(x => x.MasValidationJson).HasColumnType("jsonb"); b.Property(x => x.MasRuntimeVersion).HasMaxLength(100);
         b.Property(x => x.ConcurrencyToken).IsConcurrencyToken(); b.HasIndex(x => x.UpdatedAtUtc);
     }
 }
