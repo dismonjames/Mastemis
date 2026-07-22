@@ -43,7 +43,7 @@ public sealed class ProblemObjectStorageTests : IAsyncDisposable
         var recent = await storage.StageAsync(ProblemObjectKind.Package, new MemoryStream([2]), 10, TestContext.Current.CancellationToken);
         var stalePath = Path.Combine(_root, ".staged", "package", $"{stale.ObjectId.Split('/')[2]}.bin");
         File.SetLastWriteTimeUtc(stalePath, DateTime.UtcNow.AddDays(-2));
-        var reconciler = new ProblemObjectReconciler(_root, storage, NullLogger<ProblemObjectReconciler>.Instance);
+        var reconciler = new ProblemObjectReconciler(_root, storage, new NoReferences(), NullLogger<ProblemObjectReconciler>.Instance);
         var result = await reconciler.ReconcileAsync(DateTimeOffset.UtcNow.AddDays(-1), 100, TestContext.Current.CancellationToken);
         Assert.Equal(new(1, 1), result);
         await storage.MarkReferencedAsync(recent.ObjectId, TestContext.Current.CancellationToken);
@@ -57,4 +57,9 @@ public sealed class ProblemObjectStorageTests : IAsyncDisposable
     }
 
     private sealed class TestClock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
+    private sealed class NoReferences : IProblemObjectReferenceLookup
+    {
+        public Task<IReadOnlySet<string>> FindReferencedAsync(IReadOnlyCollection<string> objectIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlySet<string>>(new HashSet<string>(StringComparer.Ordinal));
+    }
 }
