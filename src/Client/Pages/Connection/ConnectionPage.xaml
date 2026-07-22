@@ -1,43 +1,85 @@
-<Page x:Class="Mastemis.Client.Pages.Connection.ConnectionPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Page x:Class="Mastemis.Client.Pages.Connection.ConnectionPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Background="{ThemeResource MastemisCanvasBrush}">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-            <Grid MaxWidth="1180" MinHeight="680" Margin="32" HorizontalAlignment="Center">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="0" x:Name="BrandColumn"/><ColumnDefinition Width="*" x:Name="ConnectionColumn"/></Grid.ColumnDefinitions>
-                <Border x:Name="BrandPanel" Visibility="Collapsed" Margin="0,0,44,0" Padding="44" Background="{ThemeResource MastemisAccentSubtleBrush}" CornerRadius="12">
-                    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                        <StackPanel Orientation="Horizontal" Spacing="12"><Border Width="42" Height="42" CornerRadius="8" Background="{ThemeResource MastemisAccentBrush}"><TextBlock Text="M" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><TextBlock Text="Mastemis" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel>
-                        <StackPanel Grid.Row="1" VerticalAlignment="Center" Spacing="18"><TextBlock Text="Run examinations with confidence." FontSize="38" FontWeight="SemiBold" TextWrapping="Wrap" MaxWidth="430"/><TextBlock Text="A self-hosted environment for secure programming examinations, live invigilation, judging, and problem authoring." FontSize="17" LineHeight="26" Style="{StaticResource MastemisMutedTextStyle}" MaxWidth="440"/><StackPanel Spacing="10" Margin="0,14,0,0"><TextBlock Text="• Durable examination and submission state"/><TextBlock Text="• Sandboxed C++ and C# judging"/><TextBlock Text="• Realtime warnings and operations"/></StackPanel></StackPanel>
-                        <TextBlock Grid.Row="2" Text="Private by design · Hosted by you" Style="{StaticResource MastemisCaptionTextStyle}"/>
-                    </Grid>
-                </Border>
+        <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="1" MaxWidth="700" HorizontalAlignment="Stretch" VerticalAlignment="Center" Spacing="24">
-                    <StackPanel Spacing="7"><TextBlock Text="GET STARTED" Style="{StaticResource MastemisEyebrowTextStyle}"/><TextBlock Text="Choose how to use Mastemis" Style="{StaticResource MastemisPageTitleStyle}"/><TextBlock Text="You can change servers later. Credentials are never stored with saved server addresses." Style="{StaticResource MastemisMutedTextStyle}"/></StackPanel>
-
-                    <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <RadioButton GroupName="Mode" IsChecked="{Binding IsHostSelected, Mode=TwoWay}" Style="{StaticResource MastemisModeChoiceStyle}" AutomationProperties.Name="Host Mode">
-                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><FontIcon Glyph="&#xE968;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}"/><StackPanel Grid.Column="1" Spacing="5"><TextBlock Text="Host Mode" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Run or administer a local or remote Mastemis deployment." Style="{StaticResource MastemisMutedTextStyle}"/></StackPanel></Grid>
-                        </RadioButton>
-                        <RadioButton Grid.Column="1" GroupName="Mode" IsChecked="{Binding IsConnectSelected, Mode=TwoWay}" Style="{StaticResource MastemisModeChoiceStyle}" AutomationProperties.Name="Connect Mode">
-                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><FontIcon Glyph="&#xE774;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}"/><StackPanel Grid.Column="1" Spacing="5"><TextBlock Text="Connect Mode" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Join an existing deployment as staff, author, reviewer, or candidate." Style="{StaticResource MastemisMutedTextStyle}"/></StackPanel></Grid>
-                        </RadioButton>
-                    </Grid>
-
-                    <StackPanel Spacing="8"><TextBlock Text="Server address" FontWeight="SemiBold"/><TextBlock Text="Enter the HTTPS address supplied by your administrator." Style="{StaticResource MastemisCaptionTextStyle}"/><TextBox Text="{Binding ServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="https://mastemis.example.org" Style="{StaticResource MastemisFormTextBoxStyle}" AutomationProperties.Name="Mastemis server URL"/><InfoBar IsOpen="{Binding IsDevelopmentHttp}" Severity="Warning" Title="Development connection" Message="Unencrypted HTTP is accepted only for this device's loopback address." IsClosable="False"/></StackPanel>
-
-                    <Border Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="16" Background="{ThemeResource MastemisSubtleBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><FontIcon Glyph="&#xE946;" FontSize="20" Margin="0,2,14,0" Foreground="{ThemeResource MastemisAccentBrush}"/><StackPanel Grid.Column="1" Spacing="5"><TextBlock Text="{Binding StatusTitle}" FontWeight="SemiBold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Text="{Binding ServerVersion}" Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel></Grid>
+        <!-- Native application chrome: onboarding stays recognizably Mastemis without a web-style hero. -->
+        <Border BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,0,0,1" Background="{ThemeResource MastemisNavigationBrush}">
+            <Grid MaxWidth="1180" Margin="24,0" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                    <Border Width="32" Height="32" CornerRadius="7" Background="{ThemeResource MastemisAccentBrush}">
+                        <TextBlock Text="M" Foreground="White" FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
+                    <StackPanel VerticalAlignment="Center" Spacing="0">
+                        <TextBlock Text="Mastemis" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="Secure examination environment" Style="{StaticResource MastemisCaptionTextStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="1" Style="{StaticResource MastemisSecondaryButtonStyle}" AutomationProperties.Name="Open theme settings">
+                    <StackPanel Orientation="Horizontal" Spacing="8"><SymbolIcon Symbol="Setting"/><TextBlock Text="Theme"/></StackPanel>
+                </Button>
+            </Grid>
+        </Border>
 
-                    <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Test connection" Command="{Binding TestConnectionCommand}" Style="{StaticResource MastemisSecondaryButtonStyle}" HorizontalAlignment="Stretch" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"/>
-                        <Button Grid.Column="1" Content="Edit" Command="{Binding EditServerCommand}" Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MastemisSecondaryButtonStyle}"/>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <Grid MaxWidth="860" Margin="28,36,28,44" HorizontalAlignment="Center">
+                <StackPanel Spacing="28">
+                    <StackPanel Spacing="7">
+                        <TextBlock Text="Set up Mastemis" Style="{StaticResource MastemisPageTitleStyle}"/>
+                        <TextBlock Text="Choose an operating mode, then verify the server before signing in." Style="{StaticResource MastemisMutedTextStyle}" FontSize="15"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="1  Choose a mode" Style="{StaticResource MastemisSectionTitleStyle}"/>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <ToggleButton IsChecked="{Binding IsHostSelected, Mode=TwoWay}"
+                                          MinHeight="116" Padding="18" HorizontalContentAlignment="Stretch"
+                                          AutomationProperties.Name="Host Mode">
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE968;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Spacing="5"><TextBlock Text="Host Mode" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Run or administer a Mastemis deployment. Best for examination operators." TextWrapping="Wrap" Opacity="0.78"/></StackPanel>
+                                </Grid>
+                            </ToggleButton>
+                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsConnectSelected, Mode=TwoWay}"
+                                          MinHeight="116" Padding="18" HorizontalContentAlignment="Stretch"
+                                          AutomationProperties.Name="Connect Mode">
+                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE774;" FontSize="22" Foreground="{ThemeResource MastemisAccentBrush}" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                    <StackPanel Grid.Column="1" Spacing="5"><TextBlock Text="Connect Mode" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="Join an existing server as staff, author, reviewer, or candidate." TextWrapping="Wrap" Opacity="0.78"/></StackPanel>
+                                </Grid>
+                            </ToggleButton>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="2  Connect to a server" Style="{StaticResource MastemisSectionTitleStyle}"/>
+                        <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                            <StackPanel Spacing="13">
+                                <StackPanel Spacing="5"><TextBlock Text="Server address" FontWeight="SemiBold"/><TextBlock Text="Use the HTTPS address supplied by the deployment administrator." Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
+                                <TextBox Text="{Binding ServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="https://mastemis.example.org" Style="{StaticResource MastemisFormTextBoxStyle}" AutomationProperties.Name="Mastemis server URL"/>
+                                <InfoBar IsOpen="{Binding IsDevelopmentHttp}" Severity="Warning" Title="Development HTTP" Message="Allowed only for the loopback address on this device." IsClosable="False"/>
+
+                                <Border Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="14" Background="{ThemeResource MastemisSubtleBrush}" CornerRadius="6">
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <FontIcon Glyph="&#xE946;" FontSize="18" Margin="0,2,12,0" Foreground="{ThemeResource MastemisAccentBrush}"/>
+                                        <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="{Binding StatusTitle}" FontWeight="SemiBold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Text="{Binding ServerVersion}" Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
+                                    </Grid>
+                                </Border>
+                                <ProgressBar IsIndeterminate="{Binding IsBusy}" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" AutomationProperties.Name="Testing server connection"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="Credentials are requested only after compatibility is confirmed." Style="{StaticResource MastemisCaptionTextStyle}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="Test connection" Command="{Binding TestConnectionCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}" Style="{StaticResource MastemisSecondaryButtonStyle}"/>
                         <Button Grid.Column="2" Content="Continue" Command="{Binding ContinueCommand}" IsEnabled="{Binding CanContinue}" Style="{StaticResource MastemisPrimaryButtonStyle}"/>
                     </Grid>
-                    <ProgressBar IsIndeterminate="{Binding IsBusy}" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" AutomationProperties.Name="Testing server connection"/>
                 </StackPanel>
-
-                <VisualStateManager.VisualStateGroups><VisualStateGroup><VisualState x:Name="Compact"/><VisualState x:Name="Wide"><VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="980"/></VisualState.StateTriggers><VisualState.Setters><Setter Target="BrandColumn.Width" Value="5*"/><Setter Target="BrandPanel.Visibility" Value="Visible"/><Setter Target="ConnectionColumn.Width" Value="6*"/></VisualState.Setters></VisualState></VisualStateGroup></VisualStateManager.VisualStateGroups>
             </Grid>
         </ScrollViewer>
     </Grid>
