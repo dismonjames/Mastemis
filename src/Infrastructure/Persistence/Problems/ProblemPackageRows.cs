@@ -18,4 +18,12 @@ public sealed class ProblemPackageExportRow
     public string ObjectId { get; set; } = string.Empty;
     public long Length { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
+    public int ProblemVersion { get; set; }
+    public Guid ActorUserId { get; set; }
+    public bool IncludeHidden { get; set; }
+    public string FormatVersion { get; set; } = "1.0";
+    public DateTimeOffset ExpiresAtUtc { get; set; }
+    public string Status { get; set; } = "Ready";
+    public string? FailureCode { get; set; }
+    public string IdempotencyKey { get; set; } = string.Empty;
 }

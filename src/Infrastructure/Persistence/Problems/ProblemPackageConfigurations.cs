@@ -18,6 +18,9 @@ internal sealed class ProblemPackageExportConfiguration : IEntityTypeConfigurati
     public void Configure(EntityTypeBuilder<ProblemPackageExportRow> b)
     {
         b.ToTable("problem_package_exports"); b.HasKey(x => x.Id); b.Property(x => x.PackageSha256).HasMaxLength(64);
-        b.Property(x => x.ObjectId).HasMaxLength(300); b.HasIndex(x => new { x.ProblemId, x.CreatedAtUtc });
+        b.Property(x => x.ObjectId).HasMaxLength(300); b.Property(x => x.FormatVersion).HasMaxLength(16);
+        b.Property(x => x.Status).HasMaxLength(24); b.Property(x => x.FailureCode).HasMaxLength(100);
+        b.Property(x => x.IdempotencyKey).HasMaxLength(128); b.HasIndex(x => x.IdempotencyKey).IsUnique();
+        b.HasIndex(x => new { x.ProblemId, x.CreatedAtUtc }); b.HasIndex(x => new { x.Status, x.ExpiresAtUtc });
     }
 }
