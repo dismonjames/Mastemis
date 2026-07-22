@@ -1,4 +1,5 @@
 using Mastemis.Client.Core.Authentication;
+using Mastemis.Client.Core.Features.About;
 using Mastemis.Client.Core.Features.CandidateExam;
 using Mastemis.Client.Core.Features.Candidates;
 using Mastemis.Client.Core.Features.Connection;
@@ -19,6 +20,7 @@ using Mastemis.Client.Core.Networking.Realtime;
 using Mastemis.Client.Core.Session;
 using Mastemis.Client.Core.Storage;
 using Mastemis.Client.Navigation;
+using Mastemis.Client.Pages.About;
 using Mastemis.Client.Pages.CandidateExam;
 using Mastemis.Client.Pages.Candidates;
 using Mastemis.Client.Pages.Connection;
@@ -83,6 +85,7 @@ public sealed partial class App : Application
         services.AddSingleton<ProblemStudioViewModel>();
         services.AddSingleton<HealthViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<AboutViewModel>();
         services.AddSingleton<ConnectionPage>();
         services.AddSingleton<LoginPage>();
         services.AddSingleton<DashboardPage>();
@@ -99,6 +102,7 @@ public sealed partial class App : Application
         services.AddSingleton<ProblemsPage>();
         services.AddSingleton<WorkersPage>();
         services.AddSingleton<NotFoundPage>();
+        services.AddSingleton<AboutPage>();
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<ConnectionPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<LoginPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<DashboardPage>());
@@ -114,6 +118,7 @@ public sealed partial class App : Application
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<EvidencePage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<ProblemsPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<WorkersPage>());
+        services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<AboutPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<NotFoundPage>());
         services.AddSingleton<ClientPageRegistry>();
         services.AddSingleton<ShellPage>();

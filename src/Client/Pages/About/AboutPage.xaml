@@ -1,0 +1,22 @@
+<Page x:Class="Mastemis.Client.Pages.About.AboutPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="using:Mastemis.Client.Controls">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Padding="{StaticResource MastemisPageMargin}" Spacing="18" MaxWidth="900" HorizontalAlignment="Left">
+            <controls:PageHeader Eyebrow="PRODUCT INFORMATION" Title="About Mastemis" Subtitle="Authorship, version, and open-source license information."/>
+            <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="22">
+                <Grid ColumnSpacing="20"><Grid.ColumnDefinitions><ColumnDefinition Width="72"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Width="64" Height="64" Background="{ThemeResource MastemisAccentBrush}" CornerRadius="12"><TextBlock Text="M" FontSize="30" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/></Border>
+                    <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="{Binding Product}" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="Secure programming examination environment" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Text="{Binding VersionLabel}" Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
+                </Grid>
+            </Border>
+            <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8">
+                <StackPanel><TextBlock Padding="18,14" Text="Authorship" Style="{StaticResource MastemisSectionTitleStyle}"/><Grid Padding="18,12" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="0,1,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="Author" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Grid.Column="1" Text="{Binding Author}" FontWeight="SemiBold"/></Grid><Grid Padding="18,12"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="Copyright" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Grid.Column="1" Text="{Binding Copyright}"/></Grid></StackPanel>
+            </Border>
+            <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
+                <StackPanel Spacing="10"><StackPanel Orientation="Horizontal" Spacing="9"><FontIcon Glyph="&#xE8D7;" Foreground="{ThemeResource MastemisAccentBrush}"/><TextBlock Text="{Binding License}" Style="{StaticResource MastemisSectionTitleStyle}"/></StackPanel><TextBlock Text="{Binding LicenseSummary}" TextWrapping="Wrap" LineHeight="22"/><TextBlock Text="The complete legal text is distributed in the repository and application source as LICENSE. The NOTICE file identifies the author and scope; third-party software is not relicensed." TextWrapping="Wrap" Style="{StaticResource MastemisMutedTextStyle}"/></StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

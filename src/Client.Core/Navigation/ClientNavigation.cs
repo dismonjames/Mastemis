@@ -5,7 +5,7 @@ namespace Mastemis.Client.Core.Navigation;
 public enum ClientRoute
 {
     Connection, Login, Dashboard, Examinations, Rooms, Candidates, CandidateExam, Submissions,
-    Invigilation, Evidence, Problems, ProblemStudio, Workers, Health, Settings, Unauthorized, NotFound
+    Invigilation, Evidence, Problems, ProblemStudio, Workers, Health, Settings, About, Unauthorized, NotFound
 }
 
 public sealed record NavigationDescriptor(ClientRoute Route, string Label, string Glyph, string Group, IReadOnlyList<string> Roles);
@@ -40,7 +40,8 @@ public sealed class NavigationCatalog
         new(ClientRoute.ProblemStudio, "Problem Studio", "\uE943", "Authoring", ["Administrator", "ExamManager", "ProblemOwner", "ProblemEditor", "ProblemReviewer", "ProblemViewer"]),
         new(ClientRoute.Workers, "Judge workers", "\uE950", "System", ["Administrator", "ExamManager"]),
         new(ClientRoute.Health, "System health", "\uE9D9", "System", ["Administrator"]),
-        new(ClientRoute.Settings, "Settings", "\uE713", "Preferences", [])
+        new(ClientRoute.Settings, "Settings", "\uE713", "Preferences", []),
+        new(ClientRoute.About, "About", "\uE946", "Preferences", [])
     ];
 
     public IReadOnlyList<NavigationDescriptor> For(ClientSession session)

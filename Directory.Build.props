@@ -7,5 +7,11 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <AnalysisLevel>latest</AnalysisLevel>
+    <Authors>Lê Hùng Quang Minh</Authors>
+    <Company>Lê Hùng Quang Minh</Company>
+    <Copyright>Copyright © 2026 Lê Hùng Quang Minh</Copyright>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile Condition="Exists('$(MSBuildThisFileDirectory)README.md')">README.md</PackageReadmeFile>
   </PropertyGroup>
 </Project>
