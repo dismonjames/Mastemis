@@ -44,7 +44,9 @@ public sealed class NavigationCatalog
     ];
 
     public IReadOnlyList<NavigationDescriptor> For(ClientSession session)
-        => Items.Where(item => item.Roles.Count == 0 || item.Roles.Any(session.Roles.Contains)).ToArray();
+        => session.IsAuthenticated
+            ? Items.Where(item => item.Roles.Count == 0 || item.Roles.Any(session.Roles.Contains)).ToArray()
+            : [];
 
     public bool IsAuthorized(ClientRoute route, ClientSession session)
         => For(session).Any(item => item.Route == route);

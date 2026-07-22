@@ -21,7 +21,7 @@ public sealed class LoginViewModel : ObservableObject
     {
         this.authentication = authentication;
         this.navigator = navigator;
-        LoginCommand = new AsyncCommand(LoginAsync, () => !string.IsNullOrWhiteSpace(Username) && Password.Length > 0);
+        LoginCommand = new AsyncCommand(LoginAsync);
     }
 
     public ICommand LoginCommand { get; }
@@ -37,6 +37,11 @@ public sealed class LoginViewModel : ObservableObject
         IsBusy = true; ErrorMessage = null;
         try
         {
+            if (string.IsNullOrWhiteSpace(Username) || Password.Length == 0)
+            {
+                ErrorMessage = "Username and password are required.";
+                return;
+            }
             await authentication.LoginAsync(Username.Trim(), Password, RememberMe, cancellationToken).ConfigureAwait(true);
             Password = string.Empty;
             navigator.Navigate(ClientRoute.Dashboard);
