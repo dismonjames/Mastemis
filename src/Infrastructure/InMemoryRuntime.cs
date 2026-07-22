@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using Mastemis.Application;
 using Mastemis.Domain;
 
@@ -149,37 +148,5 @@ public sealed class InMemoryRuntime : IAggregateStore, IUnitOfWork, IDurableJudg
         ct.ThrowIfCancellationRequested();
         dictionary.TryGetValue(key, out var value);
         return Task.FromResult(value);
-    }
-}
-
-public sealed class FileSourceRevisionStorage(string rootPath) : ISourceRevisionStorage
-{
-    private readonly string _root = Path.GetFullPath(rootPath);
-
-    public async Task<StoredSourceRevision> StoreAsync(SourceRevisionId id, ReadOnlyMemory<byte> content, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(_root);
-        var objectId = $"source/{id.Value:N}.bin";
-        var finalPath = Resolve(objectId);
-        Directory.CreateDirectory(Path.GetDirectoryName(finalPath)!);
-        var temporaryPath = Path.Combine(_root, $".{Guid.NewGuid():N}.tmp");
-        try
-        {
-            await File.WriteAllBytesAsync(temporaryPath, content.ToArray(), cancellationToken);
-            File.Move(temporaryPath, finalPath, false);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
-        }
-        return new StoredSourceRevision(objectId, Convert.ToHexString(SHA256.HashData(content.Span)).ToLowerInvariant(), content.Length);
-    }
-
-    private string Resolve(string objectId)
-    {
-        var path = Path.GetFullPath(Path.Combine(_root, objectId));
-        if (!path.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            throw new ApplicationFailure(ErrorCodes.InvalidInput, "Unsafe storage path.");
-        return path;
     }
 }

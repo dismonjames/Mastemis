@@ -1,6 +1,7 @@
 using Mastemis.Application;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Outbox;
+using Mastemis.Infrastructure.Storage.Reconciliation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -77,6 +78,16 @@ public sealed class StorageHealthCheck(IConfiguration configuration) : IHealthCh
         {
             return Task.FromResult(HealthCheckResult.Unhealthy("Storage path is unavailable."));
         }
+    }
+}
+
+public sealed class SourceReconciliationHealthCheck(SourceReconciliationStatus status) : IHealthCheck
+{
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(status.Failed ? HealthCheckResult.Degraded("The latest source reconciliation pass failed; cleanup is suspended until database verification succeeds.")
+            : HealthCheckResult.Healthy(status.LastSuccessUtc is null ? "Source reconciliation is configured and awaiting its first pass." : "Source reconciliation completed successfully."));
     }
 }
 

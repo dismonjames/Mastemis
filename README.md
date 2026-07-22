@@ -33,11 +33,15 @@ dotnet ef database update --project src/Infrastructure
 
 The server applies pending migrations at startup unless `Database__ApplyMigrations=false`. For an optional first administrator, set `Bootstrap__Administrator__Username` and `Bootstrap__Administrator__Password` through a secret provider or environment only. If either value is absent, no account is created. Existing accounts are never overwritten and credentials are never logged. Remove the bootstrap values after first startup.
 
-Human users authenticate with `POST /api/auth/login` and a secure, HTTP-only, SameSite cookie. Obtain an antiforgery token from `/api/auth/antiforgery` for protected cookie mutations. Roles are Administrator, ExamManager, ChiefInvigilator, RoomInvigilator, Candidate, JudgeWorker, and EvidenceReviewer. Examination and room access also require stored scope assignments; Administrator does not implicitly receive evidence-review access.
+Human users authenticate with `POST /api/auth/login` and a secure, HTTP-only, SameSite cookie. Obtain an antiforgery token from `/api/auth/antiforgery` for protected cookie mutations. Roles are Administrator, ExamManager, ChiefInvigilator, RoomInvigilator, Candidate, JudgeWorker, and EvidenceReviewer. Administrators manage human identities through `/api/admin/users`; examination and room assignments use `/api/scopes`. Candidate identities cannot be converted into worker credentials. Examination and room access require stored scope assignments.
+
+Evidence metadata is available through `/api/evidence`. EvidenceReviewer and Administrator roles do not bypass package grants: reviewers need an explicit package grant, while assigned room and chief invigilators may read metadata in their scope. Successful metadata, item, timeline, and audit reads append access-audit rows. Binary screenshots and evidence export are not implemented.
 
 Administrators issue worker credentials through `/api/admin/workers`. The returned secret is shown once; only its Identity password-hash representation is stored. Workers authenticate with `Authorization: Worker {worker-id}.{secret}` and use `/api/worker`. Rotation revokes prior credentials, revocation disables the worker, and optional expiry is enforced.
 
-Judge claims use PostgreSQL row locks with `FOR UPDATE SKIP LOCKED`, unpredictable lease identifiers, expiry recovery, bounded attempts, and worker/lease validation. Outbox publication is at-least-once: state and versioned notification payloads commit together, a bounded dispatcher publishes after commit, and realtime envelopes contain a stable message identifier for client deduplication.
+Judge claims use PostgreSQL row locks with `FOR UPDATE SKIP LOCKED`, unpredictable lease identifiers, expiry recovery, bounded attempts, and worker/lease validation. Outbox publication is at-least-once: state and versioned notification payloads commit together, dispatchers claim rows with `FOR UPDATE SKIP LOCKED`, poison repeated failures after ten attempts, and realtime envelopes contain a stable message identifier for client deduplication.
+
+Source objects are atomically renamed before their metadata transaction commits. A hosted reconciler scans a bounded batch of old generated objects, verifies references in PostgreSQL first, and removes only stale unreferenced objects. Configure `Storage__OrphanAgeMinutes`, `Storage__ReconciliationIntervalMinutes`, and `Storage__ReconciliationBatchSize`; recent objects and all referenced objects are retained.
 
 ## Privacy
 

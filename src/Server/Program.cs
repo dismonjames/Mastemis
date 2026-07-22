@@ -9,6 +9,8 @@ using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Auditing;
 using Mastemis.Infrastructure.Persistence.Identity;
 using Mastemis.Infrastructure.Persistence.Outbox;
+using Mastemis.Infrastructure.Storage.Reconciliation;
+using Mastemis.Infrastructure.Storage.SourceRevisions;
 using Mastemis.Server.Authorization;
 using Mastemis.Server.Endpoints.Administration;
 using Mastemis.Server.Endpoints.Auth;
@@ -39,6 +41,13 @@ builder.Services.AddRateLimiter(options => options.GlobalLimiter = PartitionedRa
         new FixedWindowRateLimiterOptions { PermitLimit = 200, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
 
 var connectionString = builder.Configuration.GetConnectionString("Mastemis");
+var storageRoot = builder.Configuration["Storage:Path"] ?? Path.Combine(AppContext.BaseDirectory, "storage");
+var reconciliationOptions = new SourceReconciliationOptions(storageRoot,
+    TimeSpan.FromMinutes(int.TryParse(builder.Configuration["Storage:OrphanAgeMinutes"], out var orphanMinutes) ? Math.Clamp(orphanMinutes, 5, 10080) : 1440),
+    TimeSpan.FromMinutes(int.TryParse(builder.Configuration["Storage:ReconciliationIntervalMinutes"], out var scanMinutes) ? Math.Clamp(scanMinutes, 1, 1440) : 60),
+    int.TryParse(builder.Configuration["Storage:ReconciliationBatchSize"], out var batchSize) ? batchSize : 100);
+builder.Services.AddSingleton(reconciliationOptions);
+builder.Services.AddSingleton<SourceReconciliationStatus>();
 var durableMode = !string.IsNullOrWhiteSpace(connectionString);
 if (durableMode)
 {
@@ -86,12 +95,15 @@ if (durableMode)
     builder.Services.AddScoped<IOutboxDeliveryStore, PostgresOutboxDeliveryStore>();
     builder.Services.AddScoped<OutboxBatchProcessor>();
     builder.Services.AddScoped<RealtimeRouteResolver>();
+    builder.Services.AddScoped<SourceObjectReconciler>();
     builder.Services.AddHostedService<IdentityBootstrapService>();
     builder.Services.AddHostedService<OutboxDispatcher>();
+    builder.Services.AddHostedService<SourceObjectReconciliationService>();
     builder.Services.AddHealthChecks()
         .AddCheck<DatabaseSchemaHealthCheck>("database_schema", tags: ["ready"])
         .AddCheck<OutboxHealthCheck>("outbox_dispatcher", tags: ["ready"])
         .AddCheck<JudgeQueueHealthCheck>("judge_queue", tags: ["ready"]);
+    builder.Services.AddHealthChecks().AddCheck<SourceReconciliationHealthCheck>("source_reconciliation", tags: ["ready"]);
 }
 else
 {
@@ -110,8 +122,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("EvidenceReview", policy => policy.RequireRole(MastemisRoles.EvidenceReviewer))
     .AddPolicy("Audit", policy => policy.RequireRole(MastemisRoles.Administrator));
 builder.Services.AddSingleton<IClock, SystemClock>();
-builder.Services.AddSingleton<ISourceRevisionStorage>(_ => new FileSourceRevisionStorage(
-    builder.Configuration["Storage:Path"] ?? Path.Combine(AppContext.BaseDirectory, "storage")));
+builder.Services.AddSingleton<ISourceRevisionStorage>(_ => new FileSourceRevisionStorage(storageRoot));
 builder.Services.AddScoped<MastemisService>();
 
 var app = builder.Build();

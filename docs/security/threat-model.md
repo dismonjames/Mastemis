@@ -6,4 +6,6 @@ Implemented controls include server UTC timestamps, explicit domain transitions,
 
 PostgreSQL mode uses Identity password hashing, lockout, secure SameSite cookies, explicit human roles, examination/room/candidate resource checks, hashed and revocable worker secrets, lease ownership checks, unique replay constraints, optimistic concurrency, durable audit metadata, and post-commit outbox delivery. Worker secrets are returned only on issuance or rotation. Worker authentication cannot use human management endpoints, and human cookies cannot use worker endpoints.
 
-Remaining risks include operator TLS/configuration errors, filesystem/database split-brain objects, at-least-once realtime duplicates, denial-of-service beyond configured request/queue bounds, and incomplete evidence-review APIs. The Development runtime intentionally permits operations and must not be exposed. Browser DevTools detection remains an unreliable signal and never establishes guilt by itself.
+Evidence metadata access requires explicit grants or invigilator scope and successful reads are audited. Administrators do not implicitly bypass package review grants.
+
+Remaining risks include operator TLS/configuration errors, the bounded period before orphan source reconciliation, missing referenced filesystem objects, at-least-once realtime duplicates, and denial-of-service beyond configured request/queue bounds. The Development runtime intentionally permits operations and must not be exposed. Browser DevTools detection remains an unreliable signal and never establishes guilt by itself.

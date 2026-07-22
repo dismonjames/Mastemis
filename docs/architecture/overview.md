@@ -4,8 +4,9 @@
 
 - `src/Domain`: framework-free identifiers, entities, state machines, and invariants.
 - `src/Application`: use-case orchestration and infrastructure abstractions; no ASP.NET Core or EF Core dependency.
-- `src/Infrastructure`: development runtime, production aggregate persistence, ASP.NET Core Identity store, durable queue, worker credentials, atomic source storage, migrations, and outbox dispatcher.
-- `src/Server`: composition root, cookie and worker authentication, resource-scoped authorization, HTTP API, health checks, secure headers, rate limiting, OpenAPI, and SignalR fan-out.
+- `src/Infrastructure/Persistence`: aggregate persistence, focused identity and scope administration, auditing, durable queue, migrations, and concurrent outbox delivery.
+- `src/Infrastructure/Storage`: hash-addressed source writes and bounded orphan reconciliation.
+- `src/Server`: composition root plus feature-grouped authentication, administration, evidence, examination, and worker endpoints; resource authorization and realtime routing are separate subsystems.
 - `tests`: behavior tests at domain, application, and HTTP boundaries.
 - `deploy/compose`: opt-in local PostgreSQL.
 
@@ -19,9 +20,11 @@ When PostgreSQL is configured, a scoped `PostgresRuntime` rehydrates framework-f
 
 Queue claims use `FOR UPDATE SKIP LOCKED`; leases bind a worker, job, unpredictable lease identifier, and expiry. Completion checks all four and is idempotent for an already completed job owned by the same worker. Expired leases are eligible for recovery while attempts remain.
 
-Outbox messages contain a versioned type, JSON contract, occurrence time, retry state, and stable identifier. The hosted dispatcher publishes only committed rows, marks success after SignalR returns, and retries failures with bounded exponential backoff. SignalR delivery is at-least-once, so `RealtimeEnvelope.MessageId` is the client deduplication key. Group entry is authorized for examination, room, candidate, chief, and worker scopes.
+Outbox messages contain a versioned type, JSON contract, occurrence time, retry state, and stable identifier. Each dispatcher holds a PostgreSQL `FOR UPDATE SKIP LOCKED` claim through publication and marks success only after SignalR returns. A crash between publication and commit can redeliver, so delivery is at-least-once and `RealtimeEnvelope.MessageId` is the client deduplication key. Failures use bounded exponential backoff and the tenth failure marks the row poison. Group entry is authorized independently for examination, room, enabled candidate, assigned chief, and bound worker scopes.
 
-Source contents remain outside PostgreSQL. Files use generated names, canonical paths, atomic rename, SHA-256, and relational length metadata. Filesystem and PostgreSQL cannot share a transaction: a database rollback after file finalization can leave an unreferenced object. Operators should periodically reconcile unreferenced objects; a missing referenced object is an operational fault and readiness verifies only storage accessibility.
+Source contents remain outside PostgreSQL. Files use generated names, canonical paths, atomic rename, SHA-256, and relational length metadata. Filesystem and PostgreSQL cannot share a transaction: a database rollback after file finalization can leave an unreferenced object. The reconciliation service examines only generated `source/{guid}.bin` names, waits for the configured orphan age, queries all candidate references before deletion, and is idempotent. A database failure suspends that pass without deletion. A missing referenced object remains an operational fault.
+
+Evidence metadata packages, items, and explicit reviewer grants are relational. Room and chief access derives from assignments; Administrator and EvidenceReviewer identities require a package grant. Successful sensitive reads append immutable application-level audit records. Binary evidence storage and export remain outside this server-foundation stage.
 
 ## Local operation
 
