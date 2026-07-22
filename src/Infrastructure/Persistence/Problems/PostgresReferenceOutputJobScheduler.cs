@@ -26,13 +26,16 @@ public sealed class PostgresReferenceOutputJobScheduler(MastemisDbContext db, IR
                            select new ReferenceOutputTestCase(test.TestIndex, test.InputObjectId, test.InputSha256, test.InputLength))
             .ToArrayAsync(cancellationToken);
         var problem = await db.ProblemDrafts.AsNoTracking().SingleAsync(x => x.Id == operation.ProblemId, cancellationToken);
-        var limits = new ResourceLimits(TimeSpan.FromMilliseconds(problem.TimeLimitMilliseconds),
-            TimeSpan.FromMilliseconds(Math.Max(problem.TimeLimitMilliseconds * 2, problem.TimeLimitMilliseconds + 250)),
+        var cpuTime = TimeSpan.FromMilliseconds(problem.TimeLimitMilliseconds);
+        var wallTime = TimeSpan.FromMilliseconds(Math.Min(600_000,
+            Math.Max(problem.TimeLimitMilliseconds * 2, problem.TimeLimitMilliseconds + 250)));
+        var limits = new ResourceLimits(cpuTime, wallTime,
             problem.MemoryLimitBytes, problem.OutputLimitBytes, Math.Max(problem.OutputLimitBytes, 67_108_864), 16,
             tests.Length, TimeSpan.FromSeconds(30), 4_194_304);
         var payload = new ReferenceOutputJobPayload(ReferenceOutputJobPayload.CurrentVersion, Guid.NewGuid(), operationId,
             new ProblemId(operation.ProblemId), operation.DraftVersion, revision.Id, revision.Language, sources, tests,
-            limits, TimeSpan.FromTicks(limits.WallTime.Ticks * tests.Length + limits.CompilationTime.Ticks));
+            limits, TimeSpan.FromTicks(Math.Min(TimeSpan.FromHours(1).Ticks,
+                checked(limits.WallTime.Ticks * tests.Length + limits.CompilationTime.Ticks))));
         return await queue.EnqueueAsync(payload, 3, cancellationToken);
     }
 }
