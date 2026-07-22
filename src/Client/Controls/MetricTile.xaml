@@ -1,0 +1,10 @@
+<UserControl x:Class="Mastemis.Client.Controls.MetricTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="{ThemeResource MastemisSurfaceBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Spacing="5"><TextBlock Text="{x:Bind Label, Mode=OneWay}" Style="{StaticResource MastemisCaptionTextStyle}"/><TextBlock Text="{x:Bind Value, Mode=OneWay}" FontSize="25" FontWeight="SemiBold"/><TextBlock Text="{x:Bind Detail, Mode=OneWay}" Style="{StaticResource MastemisCaptionTextStyle}"/></StackPanel>
+            <FontIcon Grid.Column="1" Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="20" Foreground="{ThemeResource MastemisAccentBrush}"/>
+        </Grid>
+    </Border>
+</UserControl>
