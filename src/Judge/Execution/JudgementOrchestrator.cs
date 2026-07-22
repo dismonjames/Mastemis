@@ -15,7 +15,7 @@ public sealed class JudgementOrchestrator(
     IJudgeWorkspaceManager workspaces,
     ISandboxRunner sandbox,
     IJudgeClock clock,
-    JudgeOrchestratorOptions options)
+    JudgeOrchestratorOptions options) : IJudgementOrchestrator
 {
     public async ValueTask<JudgeExecutionResult> ExecuteAsync(JudgeExecutionRequest request, CancellationToken cancellationToken)
     {
