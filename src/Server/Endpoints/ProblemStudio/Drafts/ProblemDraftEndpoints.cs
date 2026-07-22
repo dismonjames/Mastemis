@@ -1,5 +1,6 @@
 using Mastemis.Application;
 using Mastemis.Application.Problems.Authoring;
+using Mastemis.Application.Problems.Drafts;
 using Mastemis.Application.Problems.Generation;
 using Mastemis.Domain;
 
@@ -14,6 +15,7 @@ public static class ProblemDraftEndpoints
             var draft = await service.CreateAsync(request.Title, request.DefaultLocale, ct);
             return Results.Created($"/api/problem-studio/drafts/{draft.Id.Value}", Response(draft));
         });
+        group.MapGet("/drafts", async (IProblemDraftService drafts, CancellationToken ct) => Results.Ok(await drafts.ListAsync(ct)));
         group.MapGet("/drafts/{problemId:guid}", async (Guid problemId, IProblemStudioStore store,
             Mastemis.Application.IAuthorizationService authorization, CancellationToken ct) =>
         {
@@ -21,6 +23,11 @@ public static class ProblemDraftEndpoints
             var draft = await store.GetAsync(new(problemId), ct) ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Problem not found.");
             return Results.Ok(Response(draft));
         });
+        group.MapPut("/drafts/{problemId:guid}", async (Guid problemId, UpdateProblemDraftRequest request,
+            IProblemDraftService drafts, CancellationToken ct) => Results.Ok(await drafts.UpdateAsync(new(problemId), request.ToCommand(), ct)));
+        group.MapDelete("/drafts/{problemId:guid}", async (Guid problemId, int expectedVersion,
+            IProblemDraftService drafts, CancellationToken ct) =>
+        { await drafts.DeleteAsync(new(problemId), expectedVersion, ct); return Results.NoContent(); });
         return group;
     }
 

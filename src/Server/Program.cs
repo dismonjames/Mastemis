@@ -6,6 +6,7 @@ using Mastemis.Application.Evidence;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
 using Mastemis.Application.Problems.Authorization;
+using Mastemis.Application.Problems.Drafts;
 using Mastemis.Application.Problems.Generation;
 using Mastemis.Application.Problems.Packages;
 using Mastemis.Application.Problems.ReferenceOutputs;
@@ -123,6 +124,7 @@ if (durableMode)
     builder.Services.AddScoped<RealtimeRouteResolver>();
     builder.Services.AddScoped<SourceObjectReconciler>();
     builder.Services.AddScoped<IProblemStudioStore, PostgresProblemStudioStore>();
+    builder.Services.AddScoped<IProblemDraftService, PostgresProblemDraftService>();
     builder.Services.AddScoped<IReferenceOutputJobScheduler, PostgresReferenceOutputJobScheduler>();
     builder.Services.AddScoped<IProblemTestSetPublisher, PostgresProblemTestSetPublisher>();
     builder.Services.AddScoped<IProblemTestQueryService, PostgresProblemTestQueryService>();

@@ -4,6 +4,10 @@ public sealed class ProblemDraftRow
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string AuthorsJson { get; set; } = "[]";
+    public string TagsJson { get; set; } = "[]";
+    public string Difficulty { get; set; } = "unspecified";
+    public string AcceptedLanguagesJson { get; set; } = "[\"cpp\",\"csharp\"]";
     public string DefaultLocale { get; set; } = string.Empty;
     public long TimeLimitMilliseconds { get; set; } = 1000;
     public long MemoryLimitBytes { get; set; } = 268_435_456;
