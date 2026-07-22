@@ -29,7 +29,8 @@ public sealed class RoomOperationsViewModel : ObservableObject
     {
         Error = null; if (!Guid.TryParse(ExamId, out var id)) { Error = "Enter a valid examination ID."; return; }
         IsBusy = true; try { var page = await client.ListAsync(id, null, cancellationToken).ConfigureAwait(true); Rooms.Clear(); foreach (var room in page?.Items ?? []) Rooms.Add(room); OnPropertyChanged(nameof(HasLoadedRooms)); }
-        catch (ApiException value) { Error = value.Problem.Title; } finally { IsBusy = false; }
+        catch (ApiException value) { Error = value.Problem.Title; }
+        finally { IsBusy = false; }
     }
     private async Task CreateAsync(CancellationToken cancellationToken)
     {

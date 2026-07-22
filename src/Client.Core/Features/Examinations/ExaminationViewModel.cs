@@ -1,8 +1,8 @@
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Mastemis.Client.Core.Common;
 using Mastemis.Client.Core.Common.Commands;
 using Mastemis.Client.Core.Networking.Http;
-using System.Collections.ObjectModel;
 
 namespace Mastemis.Client.Core.Features.Examinations;
 

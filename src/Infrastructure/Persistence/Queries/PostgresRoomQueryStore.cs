@@ -32,7 +32,8 @@ public sealed class PostgresRoomQueryStore(MastemisDbContext db) : IRoomQuerySto
         if (room is null) return null;
         var invigilators = await (from assignment in db.RoomAssignments.AsNoTracking()
                                   join user in db.Users.AsNoTracking() on assignment.UserId equals user.Id
-                                  where assignment.RoomId == roomId orderby user.DisplayName
+                                  where assignment.RoomId == roomId
+                                  orderby user.DisplayName
                                   select new RoomInvigilatorItem(user.Id, user.DisplayName, assignment.AssignedAtUtc))
             .ToArrayAsync(cancellationToken);
         return new(room.Id, room.ExamId, room.Code, room.Name, null,

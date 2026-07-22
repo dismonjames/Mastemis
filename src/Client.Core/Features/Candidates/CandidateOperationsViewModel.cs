@@ -31,7 +31,8 @@ public sealed class CandidateOperationsViewModel : ObservableObject
     {
         Error = null; if (!Guid.TryParse(ExamId, out var exam)) { Error = "Enter a valid examination ID."; return; }
         IsBusy = true; try { var page = await client.ListAsync(exam, null, cancellationToken).ConfigureAwait(true); Candidates.Clear(); foreach (var item in page?.Items ?? []) Candidates.Add(item); OnPropertyChanged(nameof(HasCandidates)); }
-        catch (ApiException value) { Error = value.Problem.Title; } finally { IsBusy = false; }
+        catch (ApiException value) { Error = value.Problem.Title; }
+        finally { IsBusy = false; }
     }
     private async Task RegisterAsync(CancellationToken cancellationToken)
     {

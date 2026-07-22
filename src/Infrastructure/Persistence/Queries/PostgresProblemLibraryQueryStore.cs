@@ -33,7 +33,12 @@ public sealed class PostgresProblemLibraryQueryStore(MastemisDbContext db) : IPr
         var rows = await query.OrderByDescending(x => x.UpdatedAtUtc).ThenBy(x => x.Title)
             .Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).Select(x => new
             {
-                x.Id, x.Title, x.Difficulty, x.TagsJson, x.AuthorsJson, x.UpdatedAtUtc,
+                x.Id,
+                x.Title,
+                x.Difficulty,
+                x.TagsJson,
+                x.AuthorsJson,
+                x.UpdatedAtUtc,
                 TestVersion = db.GeneratedTestSets.Where(s => s.ProblemId == x.Id && s.Published).Max(s => (int?)s.Version),
                 AssignmentCount = db.ExamProblemAssignments.Count(a => a.ProblemId == x.Id),
                 Role = assignments.Where(a => a.ProblemId == x.Id).Select(a => (int?)a.Role).FirstOrDefault(),

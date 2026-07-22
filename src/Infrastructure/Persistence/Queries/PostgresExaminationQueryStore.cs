@@ -65,7 +65,8 @@ public sealed class PostgresExaminationQueryStore(MastemisDbContext db) : IExami
             .Take(500).ToArrayAsync(cancellationToken);
         var problems = await (from assignment in db.ExamProblemAssignments.AsNoTracking()
                               join problem in db.ProblemDrafts.AsNoTracking() on assignment.ProblemId equals problem.Id
-                              where assignment.ExamId == examId orderby problem.Title
+                              where assignment.ExamId == examId
+                              orderby problem.Title
                               select new ExaminationProblemSummary(problem.Id, problem.Title, problem.Version, assignment.AssignedAtUtc))
             .Take(200).ToArrayAsync(cancellationToken);
         var timeline = new List<ExaminationTimelineItem> { new("Created", exam.CreatedAtUtc, "Examination draft created") };

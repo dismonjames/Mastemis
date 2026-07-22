@@ -1,5 +1,5 @@
-using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Features.Workers;
+using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Navigation;
 
 namespace Mastemis.Client.Pages.Workers;
