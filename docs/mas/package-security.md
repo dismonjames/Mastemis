@@ -4,4 +4,4 @@ Package inspection buffers only within configured compressed-size limits and str
 
 Raw ZIP feature inspection rejects encryption and strong-encryption flags, methods other than stored/deflate, local/central header disagreements, unexpected trailing data, and nested ZIP-signature content. Unknown required manifest features and unreferenced files in critical directories fail closed. These checks cover what the .NET ZIP representation and bounded raw metadata inspection expose; they are not a claim of perfect ZIP parser security.
 
-Archives are never extracted to an uncontrolled directory. Current import is inspection/validation only: production CreateNew/ReplaceDraft services and signature verification remain incomplete.
+Archives are never extracted to an uncontrolled directory. Production CreateNew and ReplaceDraft workflows consume only inspected entries, map package paths to generated object identifiers, stage bounded content, and publish relational state only after validation. Package signatures remain reserved metadata and are not verified in version 1.0.
