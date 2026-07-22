@@ -67,7 +67,7 @@ public sealed class AuthorizationScopeTests
             User = new ClaimsPrincipal(new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, userId.ToString("D")), new Claim(ClaimTypes.Role, role)], "test"))
         };
-        return new ProductionApplicationAuthorization(new HttpContextAccessor { HttpContext = context }, db);
+        return new ProductionApplicationAuthorization(new HttpContextAccessor { HttpContext = context }, db, new Mastemis.Infrastructure.SystemClock());
     }
     private static MastemisDbContext CreateContext() => new(new DbContextOptionsBuilder<MastemisDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);

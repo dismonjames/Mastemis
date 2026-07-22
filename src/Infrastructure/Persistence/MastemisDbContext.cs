@@ -40,6 +40,8 @@ public sealed class MastemisDbContext(DbContextOptions<MastemisDbContext> option
     public DbSet<GeneratedTestRow> GeneratedTests => Set<GeneratedTestRow>();
     public DbSet<ProblemPackageImportRow> ProblemPackageImports => Set<ProblemPackageImportRow>();
     public DbSet<ProblemPackageExportRow> ProblemPackageExports => Set<ProblemPackageExportRow>();
+    public DbSet<ProblemAuthorAssignmentRow> ProblemAuthorAssignments => Set<ProblemAuthorAssignmentRow>();
+    public DbSet<ExamProblemAssignmentRow> ExamProblemAssignments => Set<ExamProblemAssignmentRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

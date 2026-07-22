@@ -10,6 +10,7 @@ public static class ProblemStudioEndpoints
     {
         var group = app.MapGroup("/api/problem-studio").RequireAuthorization();
         group.MapProblemDraftEndpoints();
+        group.MapProblemScopeEndpoints();
         group.MapProblemMasEndpoints();
         group.MapProblemGenerationEndpoints();
     }

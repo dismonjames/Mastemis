@@ -5,6 +5,7 @@ using Mastemis.Application.Administration;
 using Mastemis.Application.Evidence;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
+using Mastemis.Application.Problems.Authorization;
 using Mastemis.Application.Problems.Generation;
 using Mastemis.Domain;
 using Mastemis.Infrastructure;
@@ -107,6 +108,7 @@ if (durableMode)
     builder.Services.AddScoped<RealtimeRouteResolver>();
     builder.Services.AddScoped<SourceObjectReconciler>();
     builder.Services.AddScoped<IProblemStudioStore, PostgresProblemStudioStore>();
+    builder.Services.AddScoped<IProblemScopeAdministration, ProblemScopeAdministration>();
     builder.Services.AddScoped<IProblemObjectReferenceLookup, PostgresProblemObjectReferenceLookup>();
     builder.Services.AddScoped<ProblemStudioService>();
     builder.Services.AddHostedService<IdentityBootstrapService>();

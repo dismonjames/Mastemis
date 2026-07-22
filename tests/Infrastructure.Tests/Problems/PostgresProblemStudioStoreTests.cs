@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using Mastemis.Application;
+using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
+using Mastemis.Domain;
 using Mastemis.Infrastructure.Persistence;
 using Mastemis.Infrastructure.Persistence.Problems;
 using Mastemis.Infrastructure.Storage.ProblemObjects;
@@ -33,7 +35,10 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
         Guid operationId; Guid problemId;
         await using (var db = Context())
         {
-            var store = new PostgresProblemStudioStore(db, storage, clock);
+            var actor = new Actor();
+            db.Users.Add(new ApplicationUser { Id = actor.UserId.Value, UserName = "problem-owner", NormalizedUserName = "PROBLEM-OWNER", DisplayName = "Problem Owner", CreatedAtUtc = clock.UtcNow });
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            var store = new PostgresProblemStudioStore(db, storage, clock, actor);
             var draft = await store.CreateAsync("Durable", "en", TestContext.Current.CancellationToken); problemId = draft.Id.Value;
             const string source = "test 1 { input = int(1, 1) }";
             await store.SaveMasAsync(draft.Id, source, Hex(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(source))), TestContext.Current.CancellationToken);
@@ -59,4 +64,9 @@ public sealed class PostgresProblemStudioStoreTests : IAsyncLifetime
     private MastemisDbContext Context() => new(new DbContextOptionsBuilder<MastemisDbContext>().UseNpgsql(_connectionString!).Options);
     private static string Hex(byte[] hash) => Convert.ToHexString(hash).ToLowerInvariant();
     private sealed class Clock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
+    private sealed class Actor : IAdministrationActor
+    {
+        public UserId UserId { get; } = new(Guid.NewGuid());
+        public bool IsInRole(string role) => role == MastemisRoles.Administrator;
+    }
 }

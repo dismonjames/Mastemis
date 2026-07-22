@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Mastemis.Application;
+using Mastemis.Application.Administration;
 using Mastemis.Application.Problems.Assets;
 using Mastemis.Application.Problems.Authoring;
 using Mastemis.Domain;
@@ -7,13 +8,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Mastemis.Infrastructure.Persistence.Problems;
 
-public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObjectStorage objects, IClock clock) : IProblemStudioStore
+public sealed class PostgresProblemStudioStore(MastemisDbContext db, IProblemObjectStorage objects, IClock clock,
+    IAdministrationActor actor) : IProblemStudioStore
 {
     public async Task<DraftProblem> CreateAsync(string title, string locale, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
         var row = new ProblemDraftRow { Id = Guid.NewGuid(), Title = title, DefaultLocale = locale, CreatedAtUtc = now, UpdatedAtUtc = now, ConcurrencyToken = Guid.NewGuid() };
-        db.ProblemDrafts.Add(row); AddEvent("ProblemDraftCreated", row.Id, new { problemId = row.Id });
+        db.ProblemDrafts.Add(row);
+        db.ProblemAuthorAssignments.Add(new()
+        {
+            ProblemId = row.Id,
+            UserId = actor.UserId.Value,
+            Role = 0,
+            Status = 0,
+            AssignedByUserId = actor.UserId.Value,
+            AssignedAtUtc = now
+        });
+        AddEvent("ProblemDraftCreated", row.Id, new { problemId = row.Id });
         await SaveAsync(cancellationToken);
         return Map(row);
     }

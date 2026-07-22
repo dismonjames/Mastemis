@@ -4,7 +4,7 @@ using Mastemis.Domain;
 using Mastemis.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-public sealed class ProductionApplicationAuthorization(IHttpContextAccessor accessor, MastemisDbContext db)
+public sealed class ProductionApplicationAuthorization(IHttpContextAccessor accessor, MastemisDbContext db, IClock clock)
     : Mastemis.Application.IAuthorizationService
 {
     public async ValueTask EnsureAsync(string permission, Guid scopeId, CancellationToken cancellationToken)
@@ -19,7 +19,10 @@ public sealed class ProductionApplicationAuthorization(IHttpContextAccessor acce
         var allowed = permission switch
         {
             "exam.create" => HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager),
-            "problem.create" or "problem.manage" => HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager),
+            "problem.create" => HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager),
+            "problem.manage" => await CanMutateProblemAsync(scopeId, userId, roles, cancellationToken),
+            "problem.read" => await CanReadProblemAsync(scopeId, userId, roles, cancellationToken),
+            "problem.hidden" => await HasProblemRoleAsync(scopeId, userId, 0, 1, cancellationToken),
             "exam.manage" or "room.create" or "candidate.register" =>
                 HasAny(roles, MastemisRoles.Administrator, MastemisRoles.ExamManager) ||
                 await HasExamAssignmentAsync(scopeId, userId, MastemisRoles.ExamManager, cancellationToken),
@@ -84,6 +87,22 @@ public sealed class ProductionApplicationAuthorization(IHttpContextAccessor acce
         var sessionId = await db.Submissions.Where(x => x.Id == submissionId).Select(x => (Guid?)x.SessionId).SingleOrDefaultAsync(ct);
         return sessionId is { } id && await CanAccessSessionAsync(id, userId, roles, ct);
     }
+    private async Task<bool> CanMutateProblemAsync(Guid problemId, Guid userId, HashSet<string> roles, CancellationToken ct)
+    {
+        if (await db.ExamProblemAssignments.Where(x => x.ProblemId == problemId)
+            .Join(db.Exams, x => x.ExamId, x => x.Id, (_, exam) => exam.State).AnyAsync(x => x == (int)ExamState.Open, ct)) return false;
+        if (await HasProblemRoleAsync(problemId, userId, 0, 1, ct)) return true;
+        return roles.Contains(MastemisRoles.ExamManager) && await (from problem in db.ExamProblemAssignments
+                                                                   join assignment in db.ExamAssignments on problem.ExamId equals assignment.ExamId
+                                                                   where problem.ProblemId == problemId && assignment.UserId == userId && assignment.Role == MastemisRoles.ExamManager
+                                                                   select problem).AnyAsync(ct);
+    }
+    private async Task<bool> CanReadProblemAsync(Guid problemId, Guid userId, HashSet<string> roles, CancellationToken ct) =>
+        await db.ProblemAuthorAssignments.AnyAsync(x => x.ProblemId == problemId && x.UserId == userId && x.Status == 0 && (x.ExpiresAtUtc == null || x.ExpiresAtUtc > clock.UtcNow), ct) ||
+        roles.Contains(MastemisRoles.ExamManager) && await (from problem in db.ExamProblemAssignments join assignment in db.ExamAssignments on problem.ExamId equals assignment.ExamId where problem.ProblemId == problemId && assignment.UserId == userId && assignment.Role == MastemisRoles.ExamManager select problem).AnyAsync(ct);
+    private Task<bool> HasProblemRoleAsync(Guid problemId, Guid userId, int first, int second, CancellationToken ct) =>
+        db.ProblemAuthorAssignments.AnyAsync(x => x.ProblemId == problemId && x.UserId == userId && x.Status == 0 &&
+            (x.Role == first || x.Role == second) && (x.ExpiresAtUtc == null || x.ExpiresAtUtc > clock.UtcNow), ct);
     private static bool HasAny(HashSet<string> roles, params string[] expected) => expected.Any(roles.Contains);
     private static void Denied() => throw new ApplicationFailure(ErrorCodes.Forbidden, "The current identity is not authorized for this resource.");
 }
