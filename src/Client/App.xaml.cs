@@ -28,6 +28,7 @@ using Mastemis.Client.Pages.Login;
 using Mastemis.Client.Pages.ProblemStudio;
 using Mastemis.Client.Pages.Rooms;
 using Mastemis.Client.Pages.Settings;
+using Mastemis.Client.Pages.Submissions;
 using Mastemis.Client.Shell;
 using Mastemis.Client.Storage;
 
@@ -82,6 +83,7 @@ public sealed partial class App : Application
         services.AddSingleton<ProblemStudioPage>();
         services.AddSingleton<HealthPage>();
         services.AddSingleton<SettingsPage>();
+        services.AddSingleton<SubmissionsPage>();
         services.AddSingleton<NotFoundPage>();
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<ConnectionPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<LoginPage>());
@@ -93,7 +95,7 @@ public sealed partial class App : Application
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<ProblemStudioPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<HealthPage>());
         services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<SettingsPage>());
-        services.AddSingleton<IClientPage>(_ => new OperationalPage(ClientRoute.Submissions, "Submissions", "Submission history and server-authoritative judgement updates appear here."));
+        services.AddSingleton<IClientPage>(provider => provider.GetRequiredService<SubmissionsPage>());
         services.AddSingleton<IClientPage>(_ => new OperationalPage(ClientRoute.Invigilation, "Invigilation", "Raw activity, evaluations, confirmed warnings, connection state, and third-warning termination are kept visually distinct."));
         services.AddSingleton<IClientPage>(_ => new OperationalPage(ClientRoute.Evidence, "Evidence metadata", "Only explicitly granted evidence metadata and access audits are shown. Binary evidence viewing is not implemented."));
         services.AddSingleton<IClientPage>(_ => new OperationalPage(ClientRoute.Problems, "Problem library", "Authorized drafts, published problems, tags, difficulty, assignments, and package workflows are accessible through Problem Studio."));
