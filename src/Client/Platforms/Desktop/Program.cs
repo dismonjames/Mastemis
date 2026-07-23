@@ -1,19 +1,29 @@
 using Uno.UI.Hosting;
+using Mastemis.Client.Core.Diagnostics;
 
 namespace Mastemis.Client;
 
 internal static class Program
 {
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
-        var host = UnoPlatformHostBuilder.Create()
-            .App(() => new App())
-            .UseX11()
-            .UseLinuxFrameBuffer()
-            .UseMacOS()
-            .UseWin32()
-            .Build();
-        host.Run();
+        try
+        {
+            var host = UnoPlatformHostBuilder.Create()
+                .App(() => new App(args))
+                .UseX11()
+                .UseLinuxFrameBuffer()
+                .UseMacOS()
+                .UseWin32()
+                .Build();
+            host.Run();
+            return 0;
+        }
+        catch (Exception error)
+        {
+            StartupDiagnosticWriter.CreateDefault().WriteFatal(error);
+            return 1;
+        }
     }
 }

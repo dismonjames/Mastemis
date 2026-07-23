@@ -46,8 +46,10 @@ namespace Mastemis.Client;
 public sealed partial class App : Application
 {
     private Window? window;
+    private readonly string[] arguments;
 
-    public App() => InitializeComponent();
+    public App() : this([]) { }
+    public App(string[] arguments) { this.arguments = arguments; InitializeComponent(); }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
