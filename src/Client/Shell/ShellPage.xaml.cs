@@ -1,7 +1,10 @@
+using Mastemis.Client.Core.Diagnostics;
 using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Features.Shell;
 using Mastemis.Client.Core.Navigation;
+using Mastemis.Client.Core.VisualReview;
 using Mastemis.Client.Navigation;
+using Mastemis.Client.VisualReview;
 
 namespace Mastemis.Client.Shell;
 
@@ -10,6 +13,7 @@ public sealed partial class ShellPage : Page
     private readonly ShellViewModel viewModel;
     private readonly IClientNavigator navigator;
     private readonly ClientPageRegistry pages;
+    private VisualFixture? fixture;
 
     public ShellPage(ShellViewModel viewModel, SettingsViewModel settings, IClientNavigator navigator, ClientPageRegistry pages)
     {
@@ -31,6 +35,17 @@ public sealed partial class ShellPage : Page
             if (args.PropertyName == nameof(ShellViewModel.IsAuthenticated)) Show(navigator.Current);
         };
         BuildNavigation();
+        Show(navigator.Current);
+    }
+
+    public void EnableVisualReview(VisualFixture value, VisualReviewOptions options)
+    {
+        fixture = value;
+        var panel = new VisualFixturePanel { DataContext = value };
+        panel.SetReviewContext(options);
+        OnboardingReviewFixture.Content = panel;
+        AuthenticatedReviewFixture.Content = new VisualFixturePanel { DataContext = value };
+        ((VisualFixturePanel)AuthenticatedReviewFixture.Content).SetReviewContext(options);
         Show(navigator.Current);
     }
 
@@ -59,12 +74,15 @@ public sealed partial class ShellPage : Page
         var onboarding = route is ClientRoute.Connection or ClientRoute.Login || !viewModel.IsAuthenticated;
         OnboardingRoot.Visibility = onboarding ? Visibility.Visible : Visibility.Collapsed;
         Navigation.Visibility = onboarding ? Visibility.Collapsed : Visibility.Visible;
+        OnboardingReviewFixture.Visibility = onboarding && fixture is not null ? Visibility.Visible : Visibility.Collapsed;
+        AuthenticatedReviewFixture.Visibility = !onboarding && fixture is not null ? Visibility.Visible : Visibility.Collapsed;
 
         if (onboarding)
         {
             var safeRoute = route == ClientRoute.Login || route == ClientRoute.Connection
                 ? route
                 : ClientRoute.Connection;
+            OnboardingFrame.SetValue(Grid.RowProperty, fixture is null ? 0 : 1);
             OnboardingFrame.Content = pages.Resolve(safeRoute);
             return;
         }

@@ -7,6 +7,7 @@ public static class VisualReviewScenarioCatalog
     private static readonly IReadOnlyDictionary<string, VisualReviewScenario> Scenarios = Create();
 
     public static IReadOnlyCollection<VisualReviewScenario> All => Scenarios.Values.Distinct().ToArray();
+    public static IReadOnlyCollection<string> Names => Scenarios.Keys.Order(StringComparer.Ordinal).ToArray();
 
     public static bool TryResolve(string name, out VisualReviewScenario scenario) =>
         Scenarios.TryGetValue(Normalize(name), out scenario!);

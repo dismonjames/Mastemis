@@ -3,7 +3,8 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Background="{ThemeResource MastemisCanvasBrush}">
         <!-- Onboarding is intentionally independent from authenticated navigation. -->
-        <Grid x:Name="OnboardingRoot">
+        <Grid x:Name="OnboardingRoot" RowDefinitions="Auto,*">
+            <ContentControl x:Name="OnboardingReviewFixture" Visibility="Collapsed" HorizontalContentAlignment="Stretch" />
             <Frame x:Name="OnboardingFrame" />
         </Grid>
 
@@ -36,7 +37,10 @@
                     </StackPanel>
                 </Border>
             </NavigationView.PaneFooter>
-            <Frame x:Name="ContentFrame" />
+            <Grid RowDefinitions="Auto,*">
+                <ContentControl x:Name="AuthenticatedReviewFixture" Visibility="Collapsed" HorizontalContentAlignment="Stretch" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" />
+            </Grid>
         </NavigationView>
     </Grid>
 </Page>

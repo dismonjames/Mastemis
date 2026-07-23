@@ -31,6 +31,7 @@ using Mastemis.Client.Core.Networking.Realtime;
 using Mastemis.Client.Core.Platform.Files;
 using Mastemis.Client.Core.Session;
 using Mastemis.Client.Core.Storage;
+using Mastemis.Client.Core.VisualReview;
 using Mastemis.Client.Navigation;
 using Mastemis.Client.Pages.About;
 using Mastemis.Client.Pages.CandidateExam;
@@ -77,6 +78,7 @@ public sealed partial class App : Application
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
         services.AddSingleton<ClientSession>();
+        services.AddSingleton<VisualFixtureRegistry>();
         services.AddSingleton<IClientNavigator, ClientNavigator>();
         services.AddSingleton<NavigationCatalog>();
         services.AddSingleton<IUiDispatcher, ImmediateUiDispatcher>();
@@ -175,6 +177,10 @@ public sealed partial class App : Application
             string.Equals(Environment.GetEnvironmentVariable("MASTEMIS_ENABLE_VISUAL_REVIEW"), "1", StringComparison.Ordinal));
         if (review is not null)
         {
+            Resources["MastemisPageTitleFontSize"] = 28d * review.TextScale;
+            Resources["MastemisSectionTitleFontSize"] = 18d * review.TextScale;
+            Resources["MastemisCaptionFontSize"] = 12d * review.TextScale;
+            Resources["MastemisEditorFontSize"] = 14d * review.TextScale;
             var session = provider.GetRequiredService<ClientSession>();
             session.SelectServer(new Uri("https://visual-review.invalid"), ClientMode.Connect);
             session.Authenticate(new(Guid.Empty, "visual-review", "Visual Review", [review.Role]));
@@ -185,8 +191,12 @@ public sealed partial class App : Application
             provider.GetRequiredService<IClientNavigator>().Navigate(review.Route);
         }
         var shell = provider.GetRequiredService<ShellPage>();
-        if (review is not null) shell.RequestedTheme = string.Equals(review.Theme, "light", StringComparison.OrdinalIgnoreCase)
-            ? ElementTheme.Light : ElementTheme.Dark;
+        if (review is not null)
+        {
+            shell.RequestedTheme = string.Equals(review.Theme, "light", StringComparison.OrdinalIgnoreCase)
+                ? ElementTheme.Light : ElementTheme.Dark;
+            shell.EnableVisualReview(provider.GetRequiredService<VisualFixtureRegistry>().Resolve(review), review);
+        }
         window = new Window { Content = shell };
         window.Title = "Mastemis";
         window.Activate();
