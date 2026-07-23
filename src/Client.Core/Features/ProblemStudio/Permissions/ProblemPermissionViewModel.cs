@@ -17,7 +17,8 @@ public sealed class ProblemPermissionViewModel : ObservableObject
     public ICommand RefreshCommand { get; }
     public ICommand AssignCommand { get; }
     public ICommand RevokeCommand { get; }
-    public ICommand AssignExamCommand { get; } public ICommand RemoveExamCommand { get; }
+    public ICommand AssignExamCommand { get; }
+    public ICommand RemoveExamCommand { get; }
     public ProblemPermissionItem? Selected { get => selected; set => SetProperty(ref selected, value); }
     public string UserId { get => userId; set => SetProperty(ref userId, value); }
     public string Role { get => role; set => SetProperty(ref role, value); }

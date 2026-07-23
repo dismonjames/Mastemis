@@ -12,7 +12,8 @@ public sealed class ProblemActivityViewModel : ObservableObject
     private bool hasMore; private string status = "Select a draft", error = string.Empty;
     public ProblemActivityViewModel(IProblemActivityClient client) { this.client = client; RefreshCommand = new AsyncCommand(RefreshAsync); MoreCommand = new AsyncCommand(MoreAsync); }
     public ObservableCollection<ProblemActivityItem> Items { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand MoreCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand MoreCommand { get; }
     public string Filter { get => filter; set => SetProperty(ref filter, value); }
     public bool HasMore { get => hasMore; private set => SetProperty(ref hasMore, value); }
     public string Status { get => status; private set => SetProperty(ref status, value); }
