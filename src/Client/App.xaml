@@ -15,6 +15,9 @@
                 <ResourceDictionary Source="ms-appx:///Resources/Themes/Palette.xaml" />
                 <ResourceDictionary Source="ms-appx:///Resources/Styles/Typography.xaml" />
                 <ResourceDictionary Source="ms-appx:///Resources/Styles/Controls.xaml" />
+                <ResourceDictionary Source="ms-appx:///Resources/Styles/Tables.xaml" />
+                <ResourceDictionary Source="ms-appx:///Resources/Styles/Forms.xaml" />
+                <ResourceDictionary Source="ms-appx:///Resources/Styles/Feedback.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

@@ -19,6 +19,7 @@
             <SolidColorBrush x:Key="MastemisDangerBrush" Color="#B91C1C" />
             <SolidColorBrush x:Key="MastemisDangerSurfaceBrush" Color="#FDEEEE" />
             <SolidColorBrush x:Key="MastemisEditorBrush" Color="#FBFCFE" />
+            <SolidColorBrush x:Key="MastemisModalOverlayBrush" Color="#99172033" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="MastemisCanvasBrush" Color="#0B1220" />
@@ -39,6 +40,7 @@
             <SolidColorBrush x:Key="MastemisDangerBrush" Color="#F87171" />
             <SolidColorBrush x:Key="MastemisDangerSurfaceBrush" Color="#3A1C24" />
             <SolidColorBrush x:Key="MastemisEditorBrush" Color="#0D1627" />
+            <SolidColorBrush x:Key="MastemisModalOverlayBrush" Color="#C2080D18" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <x:Double x:Key="MastemisRadiusSmall">4</x:Double>

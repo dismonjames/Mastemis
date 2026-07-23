@@ -11,12 +11,13 @@
                         Visibility="Collapsed"
                         PaneDisplayMode="Auto"
                         CompactPaneLength="52"
-                        OpenPaneLength="248"
+                        OpenPaneLength="224"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
                         AlwaysShowHeader="False"
                         ItemInvoked="Navigation_ItemInvoked"
-                        Background="{ThemeResource MastemisCanvasBrush}">
+                        Background="{ThemeResource MastemisCanvasBrush}"
+                        AutomationProperties.Name="Mastemis application navigation">
             <NavigationView.PaneHeader>
                 <StackPanel Margin="8,14,8,12" Spacing="2">
                     <TextBlock Text="Mastemis" FontSize="20" FontWeight="SemiBold" />
@@ -24,14 +25,14 @@
                 </StackPanel>
             </NavigationView.PaneHeader>
             <NavigationView.PaneFooter>
-                <Border Margin="4,8" Padding="10" Background="{ThemeResource MastemisSubtleBrush}" CornerRadius="6">
+                <Border Margin="4,8" Padding="10" Background="{ThemeResource MastemisSubtleBrush}" CornerRadius="6" AutomationProperties.Name="Signed-in account and connection status">
                     <StackPanel Spacing="7">
                         <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <Ellipse Width="8" Height="8" Fill="{ThemeResource MastemisSuccessBrush}" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding RealtimeState}" Style="{StaticResource MastemisCaptionTextStyle}" />
                         </StackPanel>
-                        <Button Content="Sign out" Command="{Binding LogoutCommand}" HorizontalAlignment="Stretch" />
+                        <Button Content="Sign out" Command="{Binding LogoutCommand}" HorizontalAlignment="Stretch" AutomationProperties.HelpText="End the current Mastemis session." />
                     </StackPanel>
                 </Border>
             </NavigationView.PaneFooter>

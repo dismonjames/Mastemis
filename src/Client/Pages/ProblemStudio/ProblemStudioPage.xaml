@@ -3,15 +3,35 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:controls="using:Mastemis.Client.Controls" xmlns:sections="using:Mastemis.Client.Pages.ProblemStudio.Sections">
     <Grid Padding="{StaticResource MastemisPageMargin}" RowSpacing="14">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WindowWidthStates">
+                <VisualState x:Name="CompactStudio">
+                    <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0"/></VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SectionRailColumn.Width" Value="160"/>
+                        <Setter Target="DraftStatus.Visibility" Value="Collapsed"/>
+                        <Setter Target="DraftPicker.MinWidth" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideStudio">
+                    <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="1100"/></VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SectionRailColumn.Width" Value="180"/>
+                        <Setter Target="DraftStatus.Visibility" Value="Visible"/>
+                        <Setter Target="DraftPicker.MinWidth" Value="360"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <controls:PageHeader Eyebrow="PROBLEM AUTHORING" Title="Problem Studio" Subtitle="Edit MAS, validate deterministic generation, and monitor publication without leaving the document context.">
             <controls:PageHeader.Commands><Button Content="Refresh drafts" Command="{Binding RefreshCommand}"/><Button Content="Load selected" Command="{Binding LoadCommand}" Style="{StaticResource MastemisPrimaryButtonStyle}"/></controls:PageHeader.Commands>
         </controls:PageHeader>
         <Grid Grid.Row="1" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <ComboBox Header="Authorized draft" ItemsSource="{Binding Drafts}" SelectedItem="{Binding SelectedDraft, Mode=TwoWay}" DisplayMemberPath="Title" MinWidth="360" HorizontalAlignment="Stretch"/>
-            <Border Grid.Column="1" Padding="14,8" Background="{ThemeResource MastemisSubtleBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="6" VerticalAlignment="Bottom"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE73E;" FontSize="14"/><TextBlock Text="{Binding Status}" VerticalAlignment="Center"/></StackPanel></Border>
+            <ComboBox x:Name="DraftPicker" Header="Authorized draft" ItemsSource="{Binding Drafts}" SelectedItem="{Binding SelectedDraft, Mode=TwoWay}" DisplayMemberPath="Title" MinWidth="360" HorizontalAlignment="Stretch"/>
+            <Border x:Name="DraftStatus" Grid.Column="1" Padding="14,8" Background="{ThemeResource MastemisSubtleBrush}" BorderBrush="{ThemeResource MastemisBorderBrush}" BorderThickness="1" CornerRadius="6" VerticalAlignment="Bottom"><StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE73E;" FontSize="14"/><TextBlock Text="{Binding Status}" VerticalAlignment="Center"/></StackPanel></Border>
         </Grid>
-        <Grid Grid.Row="2" ColumnSpacing="14"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Grid Grid.Row="2" ColumnSpacing="14"><Grid.ColumnDefinitions><ColumnDefinition x:Name="SectionRailColumn" Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <ListView SelectionMode="Single" SelectedIndex="{Binding SelectedSectionIndex, Mode=TwoWay}" Background="{ThemeResource MastemisNavigationBrush}" CornerRadius="8" Padding="5" AutomationProperties.Name="Problem Studio sections">
                 <ListViewItem Content="Overview"/><ListViewItem Content="Metadata"/><ListViewItem Content="Statements"/><ListViewItem Content="MAS"/><ListViewItem Content="Diagnostics"/><ListViewItem Content="Generation"/><ListViewItem Content="Assets"/><ListViewItem Content="Reference solution"/><ListViewItem Content="Tests"/><ListViewItem Content="Packages"/><ListViewItem Content="Permissions"/><ListViewItem Content="Activity"/>
             </ListView>
