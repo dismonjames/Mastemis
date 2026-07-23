@@ -11,6 +11,8 @@ using Mastemis.Client.Core.Features.Invigilation;
 using Mastemis.Client.Core.Features.Login;
 using Mastemis.Client.Core.Features.Problems;
 using Mastemis.Client.Core.Features.ProblemStudio;
+using Mastemis.Client.Core.Features.ProblemStudio.Metadata;
+using Mastemis.Client.Core.Features.ProblemStudio.Statements;
 using Mastemis.Client.Core.Features.Rooms;
 using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Features.Shell;
@@ -83,6 +85,7 @@ public sealed partial class App : Application
         services.AddSingleton<IProblemMasClient, ProblemMasClient>();
         services.AddSingleton<IProblemGenerationClient, ProblemGenerationClient>();
         services.AddSingleton<IProblemPackageClient, ProblemPackageClient>();
+        services.AddSingleton<IProblemStatementClient, ProblemStatementClient>();
         services.AddSingleton<ICandidateSessionClient, CandidateSessionClient>();
         services.AddSingleton<IRoomClient, RoomClient>();
         services.AddSingleton<ICandidateClient, CandidateClient>();
@@ -100,6 +103,8 @@ public sealed partial class App : Application
         services.AddSingleton<InvigilationViewModel>();
         services.AddSingleton<ProblemLibraryViewModel>();
         services.AddSingleton<ProblemStudioViewModel>();
+        services.AddSingleton<ProblemMetadataViewModel>();
+        services.AddSingleton<StatementAuthoringViewModel>();
         services.AddSingleton<HealthViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<AboutViewModel>();

@@ -2,7 +2,8 @@ using Mastemis.Client.Core.Networking.Http;
 
 namespace Mastemis.Client.Core.Features.ProblemStudio;
 
-public sealed record ProblemDraftSummary(Guid Id, string Title, string DefaultLocale, long TimeLimitMilliseconds, long MemoryLimitBytes, long OutputLimitBytes, string Checker, string MasSha256, int Version = 0);
+public sealed record ProblemDraftSummary(Guid Id, string Title, string DefaultLocale, long TimeLimitMilliseconds, long MemoryLimitBytes, long OutputLimitBytes, string Checker, string MasSha256, int Version = 0,
+    IReadOnlyList<string>? Authors = null, IReadOnlyList<string>? Tags = null, string Difficulty = "unspecified", IReadOnlyList<string>? AcceptedLanguages = null);
 public sealed record MasDocument(string Source, string Sha256, int Revision, string RuntimeVersion);
 public sealed record MasDiagnostic(string Code, string Severity, string Message, int? Line = null, int? Column = null);
 public sealed record GenerationStatus(Guid Id, Guid ProblemId, string Status, int ProgressNumerator, int ProgressDenominator, string? FailureCode, Guid? PublishedTestSetId);
@@ -15,6 +16,7 @@ public interface IProblemDraftClient
     Task<IReadOnlyList<ProblemDraftSummary>> ListAsync(CancellationToken cancellationToken);
     Task<ProblemDraftSummary?> GetAsync(Guid id, CancellationToken cancellationToken);
     Task<ProblemDraftSummary> CreateAsync(string title, string locale, CancellationToken cancellationToken);
+    Task<ProblemDraftSummary?> UpdateAsync(Guid id, ProblemMetadataUpdate update, CancellationToken cancellationToken);
 }
 
 public sealed class ProblemDraftClient(IApiTransport transport) : IProblemDraftClient
@@ -26,6 +28,34 @@ public sealed class ProblemDraftClient(IApiTransport transport) : IProblemDraftC
     public async Task<ProblemDraftSummary> CreateAsync(string title, string locale, CancellationToken cancellationToken)
         => await transport.SendAsync<object, ProblemDraftSummary>(HttpMethod.Post, "/api/problem-studio/drafts", new { title, defaultLocale = locale }, Guid.NewGuid().ToString("N"), cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidDataException("The server returned an empty draft.");
+    public Task<ProblemDraftSummary?> UpdateAsync(Guid id, ProblemMetadataUpdate update, CancellationToken cancellationToken) =>
+        transport.SendAsync<ProblemMetadataUpdate, ProblemDraftSummary>(HttpMethod.Put, $"/api/problem-studio/drafts/{id:D}", update, Guid.NewGuid().ToString("N"), cancellationToken);
+}
+
+public sealed record ProblemMetadataUpdate(string Title, IReadOnlyList<string> Authors, IReadOnlyList<string> Tags,
+    string Difficulty, string DefaultLocale, IReadOnlyList<string> AcceptedLanguages, long TimeLimitMilliseconds,
+    long MemoryLimitBytes, long OutputLimitBytes, string Checker, int ExpectedVersion);
+
+public sealed record StatementContent(string Title, string Markdown, string InputDescription, string OutputDescription, string Constraints, string Notes);
+public sealed record StatementDocument(Guid ProblemId, string Locale, StatementContent Content, int Revision, string Sha256, DateTimeOffset UpdatedAtUtc);
+public sealed record StatementSummary(string Locale, string Title, int Revision, string Sha256, DateTimeOffset UpdatedAtUtc);
+public interface IProblemStatementClient
+{
+    Task<IReadOnlyList<StatementSummary>> ListAsync(Guid problemId, CancellationToken cancellationToken);
+    Task<StatementDocument?> GetAsync(Guid problemId, string locale, CancellationToken cancellationToken);
+    Task<StatementDocument?> SaveAsync(Guid problemId, string locale, StatementContent content, int? revision, CancellationToken cancellationToken);
+    Task DeleteAsync(Guid problemId, string locale, CancellationToken cancellationToken);
+}
+public sealed class ProblemStatementClient(IApiTransport transport) : IProblemStatementClient
+{
+    public async Task<IReadOnlyList<StatementSummary>> ListAsync(Guid id, CancellationToken ct) =>
+        await transport.GetAsync<List<StatementSummary>>($"/api/problem-studio/drafts/{id:D}/statements", ct).ConfigureAwait(false) ?? [];
+    public Task<StatementDocument?> GetAsync(Guid id, string locale, CancellationToken ct) =>
+        transport.GetAsync<StatementDocument>($"/api/problem-studio/drafts/{id:D}/statements/{Uri.EscapeDataString(locale)}", ct);
+    public Task<StatementDocument?> SaveAsync(Guid id, string locale, StatementContent content, int? revision, CancellationToken ct) =>
+        transport.SendAsync<object, StatementDocument>(HttpMethod.Put, $"/api/problem-studio/drafts/{id:D}/statements/{Uri.EscapeDataString(locale)}", new { content, expectedRevision = revision }, Guid.NewGuid().ToString("N"), ct);
+    public Task DeleteAsync(Guid id, string locale, CancellationToken ct) => transport.SendAsync(HttpMethod.Delete,
+        $"/api/problem-studio/drafts/{id:D}/statements/{Uri.EscapeDataString(locale)}", new { }, null, ct);
 }
 
 public interface IProblemMasClient

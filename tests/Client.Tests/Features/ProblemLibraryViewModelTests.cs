@@ -54,6 +54,8 @@ public sealed class ProblemLibraryViewModelTests
             CreateCalls++;
             return Task.FromResult(Draft(title));
         }
+        public Task<ProblemDraftSummary?> UpdateAsync(Guid id, ProblemMetadataUpdate update, CancellationToken cancellationToken) =>
+            Task.FromResult<ProblemDraftSummary?>(Draft(update.Title));
     }
 
     private sealed class LibraryClientStub(IReadOnlyList<ProblemLibraryItem> values) : IProblemLibraryClient
