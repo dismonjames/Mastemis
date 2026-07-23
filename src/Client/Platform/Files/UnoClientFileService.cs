@@ -31,6 +31,18 @@ public sealed class UnoClientFileService : IClientFileService
         await content.CopyToAsync(target, cancellationToken);
     }
 
+    public async Task<ClientFile?> OpenDroppedAsync(object platformFile, IReadOnlyList<string> extensions, CancellationToken cancellationToken)
+    {
+        if (platformFile is not StorageFile file || !extensions.Contains(file.FileType, StringComparer.OrdinalIgnoreCase)) return null;
+        cancellationToken.ThrowIfCancellationRequested();
+        var properties = await file.GetBasicPropertiesAsync();
+        return new(file.Name, ContentType(file.FileType), checked((long)properties.Size), async ct =>
+        {
+            ct.ThrowIfCancellationRequested();
+            return (Stream)await file.OpenStreamForReadAsync();
+        });
+    }
+
     private static string ContentType(string extension) => extension.ToLowerInvariant() switch
     { ".png" => "image/png", ".jpg" or ".jpeg" => "image/jpeg", ".svg" => "image/svg+xml", ".pdf" => "application/pdf", ".mas" => "application/vnd.mastemis.problem+zip", _ => "text/plain" };
 }

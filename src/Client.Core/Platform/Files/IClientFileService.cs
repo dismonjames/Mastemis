@@ -5,5 +5,6 @@ public sealed record ClientFile(string Name, string ContentType, long Length, Fu
 public interface IClientFileService
 {
     Task<ClientFile?> PickOpenAsync(IReadOnlyList<string> extensions, CancellationToken cancellationToken);
+    Task<ClientFile?> OpenDroppedAsync(object platformFile, IReadOnlyList<string> extensions, CancellationToken cancellationToken);
     Task SaveAsync(string suggestedName, Stream content, CancellationToken cancellationToken);
 }
