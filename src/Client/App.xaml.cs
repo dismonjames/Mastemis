@@ -13,7 +13,9 @@ using Mastemis.Client.Core.Features.Login;
 using Mastemis.Client.Core.Features.Problems;
 using Mastemis.Client.Core.Features.ProblemStudio;
 using Mastemis.Client.Core.Features.ProblemStudio.Assets;
+using Mastemis.Client.Core.Features.ProblemStudio.Activity;
 using Mastemis.Client.Core.Features.ProblemStudio.Metadata;
+using Mastemis.Client.Core.Features.ProblemStudio.Overview;
 using Mastemis.Client.Core.Features.ProblemStudio.Packages;
 using Mastemis.Client.Core.Features.ProblemStudio.Permissions;
 using Mastemis.Client.Core.Features.ProblemStudio.ReferenceSolution;
@@ -97,6 +99,8 @@ public sealed partial class App : Application
         services.AddSingleton<IReferenceSolutionClient, ReferenceSolutionClient>();
         services.AddSingleton<IProblemTestClient, ProblemTestClient>();
         services.AddSingleton<IProblemPermissionClient, ProblemPermissionClient>();
+        services.AddSingleton<IProblemActivityClient, ProblemActivityClient>();
+        services.AddSingleton<IProblemOverviewClient, ProblemOverviewClient>();
         services.AddSingleton<IClientFileService, UnoClientFileService>();
         services.AddSingleton<ICandidateSessionClient, CandidateSessionClient>();
         services.AddSingleton<IRoomClient, RoomClient>();
@@ -122,6 +126,8 @@ public sealed partial class App : Application
         services.AddSingleton<ProblemTestViewModel>();
         services.AddSingleton<ProblemPackageViewModel>();
         services.AddSingleton<ProblemPermissionViewModel>();
+        services.AddSingleton<ProblemActivityViewModel>();
+        services.AddSingleton<ProblemOverviewViewModel>();
         services.AddSingleton<HealthViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<AboutViewModel>();
