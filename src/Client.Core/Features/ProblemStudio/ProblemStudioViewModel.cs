@@ -13,6 +13,7 @@ public sealed class ProblemStudioViewModel : ObservableObject
     private readonly IProblemDraftClient draftsClient; private readonly IProblemMasClient masClient; private readonly IProblemGenerationClient generationClient;
     private ProblemDraftSummary? selectedDraft; private string source = string.Empty; private string seed = "1"; private string status = "Ready"; private string? error;
     private Guid? operationId; private GenerationProgress? progress;
+    private int cursorLine = 1, cursorColumn = 1;
     public ProblemStudioViewModel(IProblemDraftClient draftsClient, IProblemMasClient masClient, IProblemGenerationClient generationClient,
         ProblemMetadataViewModel metadata, StatementAuthoringViewModel statements)
     {
@@ -41,6 +42,8 @@ public sealed class ProblemStudioViewModel : ObservableObject
     public GenerationProgress? Progress { get => progress; private set => SetProperty(ref progress, value); }
     public string ProgressText => Progress is null ? "No generation operation selected" : $"{Progress.Status} · {Progress.Numerator}/{Progress.Denominator}";
     public string ReferenceStatus => Progress?.ReferenceJobStatus ?? "Not queued";
+    public string CursorPosition => $"Ln {cursorLine}, Col {cursorColumn}";
+    public void SetCursor(int line, int column) { cursorLine = Math.Max(1, line); cursorColumn = Math.Max(1, column); OnPropertyChanged(nameof(CursorPosition)); }
     private async Task RefreshAsync(CancellationToken ct) => await RunAsync(async () => { var values = await draftsClient.ListAsync(ct); Drafts.Clear(); foreach (var value in values) Drafts.Add(value); Status = $"{values.Count} authorized drafts"; }).ConfigureAwait(true);
     private async Task LoadAsync(CancellationToken ct) => await RunAsync(async () => { if (SelectedDraft is null) return; var detailed = await draftsClient.GetAsync(SelectedDraft.Id, ct) ?? SelectedDraft; SelectedDraft = detailed; Metadata.Load(detailed); Statements.SetProblem(detailed.Id); var value = await masClient.GetAsync(detailed.Id, ct); Source = value?.Source ?? string.Empty; Status = value is null ? "No MAS source" : $"MAS revision {value.Revision}"; }).ConfigureAwait(true);
     private async Task SaveMasAsync(CancellationToken ct) => await RunAsync(async () => { if (SelectedDraft is null) return; var current = await masClient.GetAsync(SelectedDraft.Id, ct); await masClient.UpdateAsync(SelectedDraft.Id, Source, current?.Revision ?? 0, ct); Status = "MAS source saved"; }).ConfigureAwait(true);
