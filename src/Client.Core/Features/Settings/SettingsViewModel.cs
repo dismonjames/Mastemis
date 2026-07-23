@@ -11,7 +11,8 @@ public sealed class SettingsViewModel : ObservableObject
     public SettingsViewModel(IClientPreferenceStore store) { this.store = store; LoadCommand = new AsyncCommand(LoadAsync); SaveCommand = new AsyncCommand(SaveAsync); }
     public IReadOnlyList<string> Themes { get; } = ["System", "Light", "Dark"]; public ICommand LoadCommand { get; }
     public ICommand SaveCommand { get; }
-    public string Theme { get => theme; set => SetProperty(ref theme, value); }
+    public event EventHandler<string>? ThemeChanged;
+    public string Theme { get => theme; set { if (SetProperty(ref theme, Themes.Contains(value) ? value : "System")) ThemeChanged?.Invoke(this, theme); } }
     public string Language { get => language; set => SetProperty(ref language, value); }
     public int EditorFontSize { get => editorFontSize; set => SetProperty(ref editorFontSize, Math.Clamp(value, 10, 28)); }
     public int TabSize { get => tabSize; set => SetProperty(ref tabSize, Math.Clamp(value, 2, 8)); }

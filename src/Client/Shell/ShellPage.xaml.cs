@@ -1,4 +1,5 @@
 using Mastemis.Client.Core.Features.Shell;
+using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Navigation;
 
@@ -10,13 +11,19 @@ public sealed partial class ShellPage : Page
     private readonly IClientNavigator navigator;
     private readonly ClientPageRegistry pages;
 
-    public ShellPage(ShellViewModel viewModel, IClientNavigator navigator, ClientPageRegistry pages)
+    public ShellPage(ShellViewModel viewModel, SettingsViewModel settings, IClientNavigator navigator, ClientPageRegistry pages)
     {
         InitializeComponent();
         DataContext = viewModel;
         this.viewModel = viewModel;
         this.navigator = navigator;
         this.pages = pages;
+        settings.ThemeChanged += (_, theme) => RequestedTheme = theme switch
+        {
+            "Light" => ElementTheme.Light,
+            "Dark" => ElementTheme.Dark,
+            _ => ElementTheme.Default
+        };
         navigator.RouteChanged += (_, route) => Show(route);
         viewModel.PropertyChanged += (_, args) =>
         {
