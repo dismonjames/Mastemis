@@ -23,6 +23,19 @@ public sealed class SettingsViewModelTests
         Assert.Equal("System", viewModel.Theme);
     }
 
+    [Fact]
+    public void Reduced_motion_applies_immediately_without_hiding_state()
+    {
+        var viewModel = new SettingsViewModel(new MemoryPreferences());
+        bool? announced = null;
+        viewModel.MotionPreferenceChanged += (_, value) => announced = value;
+
+        viewModel.ReducedMotion = true;
+
+        Assert.True(announced);
+        Assert.False(viewModel.AnimationsEnabled);
+    }
+
     private sealed class MemoryPreferences : IClientPreferenceStore
     {
         public Task<ClientPreferences> LoadAsync(CancellationToken cancellationToken) =>

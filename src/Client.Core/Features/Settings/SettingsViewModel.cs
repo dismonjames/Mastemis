@@ -17,7 +17,9 @@ public sealed class SettingsViewModel : ObservableObject
     public int EditorFontSize { get => editorFontSize; set => SetProperty(ref editorFontSize, Math.Clamp(value, 10, 28)); }
     public int TabSize { get => tabSize; set => SetProperty(ref tabSize, Math.Clamp(value, 2, 8)); }
     public int AutosaveSeconds { get => autosaveSeconds; set => SetProperty(ref autosaveSeconds, Math.Clamp(value, 2, 60)); }
-    public bool ReducedMotion { get => reducedMotion; set => SetProperty(ref reducedMotion, value); }
+    public bool ReducedMotion { get => reducedMotion; set { if (SetProperty(ref reducedMotion, value)) { OnPropertyChanged(nameof(AnimationsEnabled)); MotionPreferenceChanged?.Invoke(this, value); } } }
+    public bool AnimationsEnabled => !ReducedMotion;
+    public event EventHandler<bool>? MotionPreferenceChanged;
     public bool CompactTables { get => compactTables; set => SetProperty(ref compactTables, value); }
     public string Status { get => status; private set => SetProperty(ref status, value); }
     private async Task LoadAsync(CancellationToken ct) { var value = await store.LoadAsync(ct).ConfigureAwait(true); Theme = value.Theme; Language = value.Language; EditorFontSize = value.EditorFontSize; TabSize = value.TabSize; AutosaveSeconds = value.AutosaveSeconds; ReducedMotion = value.ReducedMotion; CompactTables = value.CompactTables; }
