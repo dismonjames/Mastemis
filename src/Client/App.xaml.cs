@@ -178,6 +178,10 @@ public sealed partial class App : Application
             var session = provider.GetRequiredService<ClientSession>();
             session.SelectServer(new Uri("https://visual-review.invalid"), ClientMode.Connect);
             session.Authenticate(new(Guid.Empty, "visual-review", "Visual Review", [review.Role]));
+            if (review.ProblemStudioSection is { } section)
+                provider.GetRequiredService<ProblemStudioViewModel>().SelectedSectionIndex = section;
+            var preferences = provider.GetRequiredService<SettingsViewModel>();
+            preferences.ReducedMotion = review.ReducedMotion;
             provider.GetRequiredService<IClientNavigator>().Navigate(review.Route);
         }
         var shell = provider.GetRequiredService<ShellPage>();
