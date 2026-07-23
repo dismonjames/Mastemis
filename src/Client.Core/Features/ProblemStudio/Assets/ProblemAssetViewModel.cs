@@ -14,7 +14,11 @@ public sealed class ProblemAssetViewModel : ObservableObject
     private string logicalName = string.Empty, status = "Select a draft", error = string.Empty;
     public ProblemAssetViewModel(IProblemAssetClient client, IClientFileService files) { this.client = client; this.files = files; RefreshCommand = new AsyncCommand(RefreshAsync); PickCommand = new AsyncCommand(PickAsync); UploadCommand = new AsyncCommand(UploadAsync); DownloadCommand = new AsyncCommand(DownloadAsync); DeleteCommand = new AsyncCommand(DeleteAsync); }
     public ObservableCollection<ProblemAssetItem> Items { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand PickCommand { get; } public ICommand UploadCommand { get; } public ICommand DownloadCommand { get; } public ICommand DeleteCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand PickCommand { get; }
+    public ICommand UploadCommand { get; }
+    public ICommand DownloadCommand { get; }
+    public ICommand DeleteCommand { get; }
     public ProblemAssetItem? Selected { get => selected; set => SetProperty(ref selected, value); }
     public string LogicalName { get => logicalName; set => SetProperty(ref logicalName, value); }
     public string PendingFile => pending?.Name ?? "No file selected";

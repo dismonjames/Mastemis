@@ -12,7 +12,9 @@ public sealed class ProblemPermissionViewModel : ObservableObject
     private string userId = string.Empty, role = "Viewer", status = "Select a draft", error = string.Empty;
     public ProblemPermissionViewModel(IProblemPermissionClient client) { this.client = client; RefreshCommand = new AsyncCommand(RefreshAsync); AssignCommand = new AsyncCommand(AssignAsync); RevokeCommand = new AsyncCommand(RevokeAsync); }
     public ObservableCollection<ProblemPermissionItem> Items { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand AssignCommand { get; } public ICommand RevokeCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand AssignCommand { get; }
+    public ICommand RevokeCommand { get; }
     public ProblemPermissionItem? Selected { get => selected; set => SetProperty(ref selected, value); }
     public string UserId { get => userId; set => SetProperty(ref userId, value); }
     public string Role { get => role; set => SetProperty(ref role, value); }

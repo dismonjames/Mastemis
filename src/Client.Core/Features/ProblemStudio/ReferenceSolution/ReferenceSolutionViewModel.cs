@@ -21,7 +21,10 @@ public sealed class ReferenceSolutionViewModel : ObservableObject
     private string language = "cpp", newFileName = "main.cpp", status = "Select a draft", error = string.Empty;
     public ReferenceSolutionViewModel(IReferenceSolutionClient client) { this.client = client; RefreshCommand = new AsyncCommand(RefreshAsync); SaveCommand = new AsyncCommand(SaveAsync); AddFileCommand = new AsyncCommand(_ => { AddFile(); return Task.CompletedTask; }); RemoveFileCommand = new AsyncCommand(_ => { RemoveFile(); return Task.CompletedTask; }); }
     public ObservableCollection<ReferenceSourceDocument> Sources { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand SaveCommand { get; } public ICommand AddFileCommand { get; } public ICommand RemoveFileCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand SaveCommand { get; }
+    public ICommand AddFileCommand { get; }
+    public ICommand RemoveFileCommand { get; }
     public ReferenceSourceDocument? Selected { get => selected; set => SetProperty(ref selected, value); }
     public string Language { get => language; set => SetProperty(ref language, value); }
     public string NewFileName { get => newFileName; set => SetProperty(ref newFileName, value); }

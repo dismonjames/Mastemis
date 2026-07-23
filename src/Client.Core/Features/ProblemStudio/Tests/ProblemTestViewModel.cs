@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Net;
+using System.Text;
 using System.Windows.Input;
 using Mastemis.Client.Core.Common;
 using Mastemis.Client.Core.Common.Commands;
@@ -14,7 +14,9 @@ public sealed class ProblemTestViewModel : ObservableObject
     private string preview = "Select a test to load a bounded preview.", status = "Select a draft", error = string.Empty;
     public ProblemTestViewModel(IProblemTestClient client) { this.client = client; RefreshCommand = new AsyncCommand(RefreshAsync); PreviewInputCommand = new AsyncCommand(ct => PreviewAsync(false, ct)); PreviewOutputCommand = new AsyncCommand(ct => PreviewAsync(true, ct)); }
     public ObservableCollection<ProblemTestItem> Items { get; } = [];
-    public ICommand RefreshCommand { get; } public ICommand PreviewInputCommand { get; } public ICommand PreviewOutputCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand PreviewInputCommand { get; }
+    public ICommand PreviewOutputCommand { get; }
     public ProblemTestItem? Selected { get => selected; set => SetProperty(ref selected, value); }
     public string Preview { get => preview; private set => SetProperty(ref preview, value); }
     public string Status { get => status; private set => SetProperty(ref status, value); }

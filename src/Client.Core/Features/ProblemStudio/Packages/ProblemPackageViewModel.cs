@@ -16,7 +16,13 @@ public sealed class ProblemPackageViewModel : ObservableObject
     public ObservableCollection<PackageDiagnostic> Diagnostics { get; } = [];
     public ObservableCollection<PackageImportMetadata> Imports { get; } = [];
     public ObservableCollection<PackageExportMetadata> Exports { get; } = [];
-    public ICommand PickCommand { get; } public ICommand ValidateCommand { get; } public ICommand ReplaceCommand { get; } public ICommand ExportCommand { get; } public ICommand RefreshCommand { get; } public ICommand DownloadCommand { get; } public ICommand ExpireCommand { get; }
+    public ICommand PickCommand { get; }
+    public ICommand ValidateCommand { get; }
+    public ICommand ReplaceCommand { get; }
+    public ICommand ExportCommand { get; }
+    public ICommand RefreshCommand { get; }
+    public ICommand DownloadCommand { get; }
+    public ICommand ExpireCommand { get; }
     public PackageExportMetadata? SelectedExport { get => selectedExport; set => SetProperty(ref selectedExport, value); }
     public string PendingFile => pending?.Name ?? "No .mas package selected";
     public string Status { get => status; private set => SetProperty(ref status, value); }
