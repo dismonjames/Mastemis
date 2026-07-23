@@ -7,6 +7,8 @@ public enum ProblemAssignmentStatus { Active, Revoked }
 
 public sealed record ProblemAuthorAssignment(ProblemId ProblemId, UserId UserId, ProblemAuthorRole Role,
     ProblemAssignmentStatus Status, UserId AssignedBy, DateTimeOffset AssignedAtUtc, DateTimeOffset? ExpiresAtUtc);
+public sealed record ProblemExamAssignment(ProblemId ProblemId, ExamId ExamId, string ExamTitle, string ExamState,
+    UserId AssignedBy, DateTimeOffset AssignedAtUtc);
 
 public interface IProblemScopeAdministration
 {
@@ -16,4 +18,5 @@ public interface IProblemScopeAdministration
     Task<IReadOnlyList<ProblemAuthorAssignment>> ListAuthorsAsync(ProblemId problemId, CancellationToken cancellationToken);
     Task AssignExamAsync(ProblemId problemId, ExamId examId, CancellationToken cancellationToken);
     Task RemoveExamAsync(ProblemId problemId, ExamId examId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ProblemExamAssignment>> ListExamsAsync(ProblemId problemId, CancellationToken cancellationToken);
 }

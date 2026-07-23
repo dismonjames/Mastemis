@@ -8,6 +8,11 @@ public static class ProblemTestEndpoints
     {
         group.MapGet("/drafts/{problemId:guid}/tests", async (Guid problemId, IProblemTestQueryService tests, CancellationToken ct) =>
             Results.Ok(await tests.ListAsync(problemId, ct)));
+        group.MapGet("/drafts/{problemId:guid}/test-sets", async (Guid problemId, IProblemTestQueryService tests, CancellationToken ct) =>
+            Results.Ok(await tests.ListVersionsAsync(problemId, ct)));
+        group.MapGet("/drafts/{problemId:guid}/test-sets/{testSetId:guid}/tests", async (Guid problemId, Guid testSetId,
+            int offset, int limit, IProblemTestQueryService tests, CancellationToken ct) =>
+            Results.Ok(await tests.ListPageAsync(problemId, testSetId, offset, limit == 0 ? 50 : limit, ct)));
         group.MapGet("/drafts/{problemId:guid}/tests/{testIndex:int}/input", async (Guid problemId, int testIndex,
             IProblemTestQueryService tests, CancellationToken ct) =>
         { var content = await tests.OpenInputAsync(problemId, testIndex, ct); return Results.Stream(content.Content, "application/octet-stream"); });

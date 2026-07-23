@@ -24,6 +24,7 @@ public sealed class ProblemScopeAdministration(MastemisDbContext db, IAdministra
         }
         row.Role = (int)role; row.Status = (int)ProblemAssignmentStatus.Active; row.AssignedByUserId = actor.UserId.Value;
         row.AssignedAtUtc = clock.UtcNow; row.ExpiresAtUtc = expiresAtUtc;
+        db.OutboxMessages.Add(ProblemOutbox.Create("ProblemPermissionChanged", problemId.Value, clock.UtcNow, new { UserId = userId.Value, Role = role.ToString(), Status = "Active", ExpiresAtUtc = expiresAtUtc }));
         await db.SaveChangesAsync(cancellationToken); return Map(row);
     }
 
@@ -34,7 +35,7 @@ public sealed class ProblemScopeAdministration(MastemisDbContext db, IAdministra
             ?? throw new ApplicationFailure(ErrorCodes.NotFound, "Problem author assignment not found.");
         if (row.Role == (int)ProblemAuthorRole.Owner && await db.ProblemAuthorAssignments.CountAsync(x => x.ProblemId == problemId.Value && x.Role == (int)ProblemAuthorRole.Owner && x.Status == 0, cancellationToken) == 1)
             throw new ApplicationFailure(ErrorCodes.IdempotencyConflict, "The last problem owner cannot be revoked.");
-        row.Status = (int)ProblemAssignmentStatus.Revoked; await db.SaveChangesAsync(cancellationToken);
+        row.Status = (int)ProblemAssignmentStatus.Revoked; db.OutboxMessages.Add(ProblemOutbox.Create("ProblemPermissionChanged", problemId.Value, clock.UtcNow, new { UserId = userId.Value, Status = "Revoked" })); await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<ProblemAuthorAssignment>> ListAuthorsAsync(ProblemId problemId, CancellationToken cancellationToken)
@@ -49,14 +50,27 @@ public sealed class ProblemScopeAdministration(MastemisDbContext db, IAdministra
         await EnsureExamManagerAsync(examId, cancellationToken);
         if (!await db.ProblemDrafts.AnyAsync(x => x.Id == problemId.Value, cancellationToken)) throw new ApplicationFailure(ErrorCodes.NotFound, "Problem not found.");
         if (!await db.ExamProblemAssignments.AnyAsync(x => x.ExamId == examId.Value && x.ProblemId == problemId.Value, cancellationToken))
-        { db.ExamProblemAssignments.Add(new() { ExamId = examId.Value, ProblemId = problemId.Value, AssignedByUserId = actor.UserId.Value, AssignedAtUtc = clock.UtcNow }); await db.SaveChangesAsync(cancellationToken); }
+        { db.ExamProblemAssignments.Add(new() { ExamId = examId.Value, ProblemId = problemId.Value, AssignedByUserId = actor.UserId.Value, AssignedAtUtc = clock.UtcNow }); db.OutboxMessages.Add(ProblemOutbox.Create("ProblemExaminationAssignmentChanged", problemId.Value, clock.UtcNow, new { ExamId = examId.Value, Status = "Assigned" })); await db.SaveChangesAsync(cancellationToken); }
     }
 
     public async Task RemoveExamAsync(ProblemId problemId, ExamId examId, CancellationToken cancellationToken)
     {
         await EnsureExamManagerAsync(examId, cancellationToken);
+        if (await db.Exams.AnyAsync(x => x.Id == examId.Value && x.State == (int)ExamState.Open, cancellationToken))
+            throw new ApplicationFailure(ErrorCodes.InvalidInput, "An open examination assignment cannot be removed.");
         var row = await db.ExamProblemAssignments.SingleOrDefaultAsync(x => x.ExamId == examId.Value && x.ProblemId == problemId.Value, cancellationToken);
-        if (row is not null) { db.ExamProblemAssignments.Remove(row); await db.SaveChangesAsync(cancellationToken); }
+        if (row is not null) { db.ExamProblemAssignments.Remove(row); db.OutboxMessages.Add(ProblemOutbox.Create("ProblemExaminationAssignmentChanged", problemId.Value, clock.UtcNow, new { ExamId = examId.Value, Status = "Removed" })); await db.SaveChangesAsync(cancellationToken); }
+    }
+
+    public async Task<IReadOnlyList<ProblemExamAssignment>> ListExamsAsync(ProblemId problemId, CancellationToken cancellationToken)
+    {
+        await EnsureCanReadAsync(problemId, cancellationToken);
+        return await (from assignment in db.ExamProblemAssignments.AsNoTracking()
+                      join exam in db.Exams.AsNoTracking() on assignment.ExamId equals exam.Id
+                      where assignment.ProblemId == problemId.Value
+                      orderby exam.Title
+                      select new ProblemExamAssignment(problemId, new(exam.Id), exam.Title, ((ExamState)exam.State).ToString(),
+                          new(assignment.AssignedByUserId), assignment.AssignedAtUtc)).ToArrayAsync(cancellationToken);
     }
 
     private async Task EnsureMayAssignAsync(ProblemId id, ProblemAuthorRole role, CancellationToken ct)

@@ -21,6 +21,8 @@ public static class ProblemScopeEndpoints
         group.MapDelete("/drafts/{problemId:guid}/exams/{examId:guid}", async (Guid problemId, Guid examId,
             IProblemScopeAdministration scopes, CancellationToken ct) =>
         { await scopes.RemoveExamAsync(new(problemId), new(examId), ct); return Results.NoContent(); });
+        group.MapGet("/drafts/{problemId:guid}/exams", async (Guid problemId, IProblemScopeAdministration scopes, CancellationToken ct) =>
+            Results.Ok(await scopes.ListExamsAsync(new(problemId), ct)));
         return group;
     }
 }

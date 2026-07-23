@@ -1,4 +1,5 @@
 using Mastemis.Server.Endpoints.ProblemStudio.Assets;
+using Mastemis.Server.Endpoints.ProblemStudio.Activity;
 using Mastemis.Server.Endpoints.ProblemStudio.Drafts;
 using Mastemis.Server.Endpoints.ProblemStudio.Generation;
 using Mastemis.Server.Endpoints.ProblemStudio.Mas;
@@ -17,6 +18,7 @@ public static class ProblemStudioEndpoints
         var group = app.MapGroup("/api/problem-studio").RequireAuthorization()
             .WithMetadata(new RequireAntiforgeryTokenAttribute(true));
         group.MapProblemDraftEndpoints();
+        group.MapProblemOverviewEndpoints();
         group.MapProblemScopeEndpoints();
         group.MapProblemStatementEndpoints();
         group.MapProblemAssetEndpoints();
@@ -25,5 +27,6 @@ public static class ProblemStudioEndpoints
         group.MapProblemGenerationEndpoints();
         group.MapProblemTestEndpoints();
         group.MapProblemPackageEndpoints();
+        group.MapProblemActivityEndpoints();
     }
 }
