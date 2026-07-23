@@ -1,5 +1,5 @@
-using Mastemis.Client.Core.Features.Shell;
 using Mastemis.Client.Core.Features.Settings;
+using Mastemis.Client.Core.Features.Shell;
 using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Navigation;
 
