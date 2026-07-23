@@ -11,13 +11,24 @@ internal static class Program
         Directory.CreateDirectory(options.OutputDirectory);
         var results = new List<CaptureMetadata>();
         using var controller = new X11WindowController();
+        using var desktop = KWinReviewSession.Begin();
+        Console.WriteLine($"KWin desktop isolation: {(desktop.IsAvailable ? "available" : "unavailable")}");
         foreach (var scenario in options.Scenarios)
             foreach (var theme in options.Themes)
                 foreach (var (width, height) in options.Sizes)
                 {
-                    var result = await CaptureAsync(controller, options, scenario, theme, width, height);
+                    desktop.PrepareCapture();
+                    CaptureMetadata result;
+                    var attempt = 0;
+                    do
+                    {
+                        attempt++;
+                        result = await CaptureAsync(controller, desktop, options, scenario, theme, width, height);
+                        if (!result.CaptureSuccess && attempt < 3) await Task.Delay(500);
+                    }
+                    while (!result.CaptureSuccess && attempt < 3);
                     results.Add(result);
-                    Console.WriteLine($"[{results.Count}] {scenario} {theme} {width}x{height}: {(result.CaptureSuccess ? "captured" : "failed")}");
+                    Console.WriteLine($"[{results.Count}] {scenario} {theme} {width}x{height}: {(result.CaptureSuccess ? "captured" : "failed")} (attempt {attempt})");
                 }
         var summaryPath = Path.Combine(options.OutputDirectory, "matrix.json");
         await File.WriteAllTextAsync(summaryPath, JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
@@ -26,7 +37,7 @@ internal static class Program
         return results.All(x => x.CaptureSuccess) ? 0 : 1;
     }
 
-    private static async Task<CaptureMetadata> CaptureAsync(X11WindowController controller, VisualCaptureOptions options,
+    private static async Task<CaptureMetadata> CaptureAsync(X11WindowController controller, KWinReviewSession desktop, VisualCaptureOptions options,
         string scenario, string theme, int width, int height)
     {
         var state = options.State == "auto" ? VisualMatrixCatalog.StateFor(scenario) : options.State;
@@ -39,11 +50,15 @@ internal static class Program
             foreach (var value in Arguments(scenario, state, options, theme, width, height)) start.ArgumentList.Add(value);
             process = Process.Start(start) ?? throw new InvalidOperationException("Desktop client did not start.");
             window = controller.WaitForNewWindow(existingWindows, options.Timeout) ?? throw new TimeoutException("No new Mastemis.Client X11 window appeared for the launched process.");
+            desktop.PrepareCapture();
+            await Task.Delay(3000);
             activated = controller.Activate(window);
             if (!activated) { Thread.Sleep(300); activated = controller.Activate(window); }
             if (!activated) throw new InvalidOperationException("Mastemis window could not be made the active foreground window.");
             window = controller.Refresh(window);
-            if (Math.Abs(window.Width - width) > 24 || Math.Abs(window.Height - height) > 48)
+            var workspaceConstrained = width == controller.DisplayWidth && height == controller.DisplayHeight &&
+                Math.Abs(window.Width - width) <= 4 && window.Height >= height - 96;
+            if (!workspaceConstrained && (Math.Abs(window.Width - width) > 24 || Math.Abs(window.Height - height) > 48))
                 throw new InvalidOperationException($"Window is {window.Width}x{window.Height}, requested {width}x{height}.");
             if (options.KeyboardSmoke && !controller.SendKeyboardSmoke(window)) throw new InvalidOperationException("Keyboard smoke input could not be delivered.");
             var name = $"{scenario}--{theme}--{width}x{height}--{state}.png";

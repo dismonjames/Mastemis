@@ -42,5 +42,8 @@
                 <Frame x:Name="ContentFrame" Grid.Row="1" />
             </Grid>
         </NavigationView>
+        <Rectangle x:Name="ReviewCaptureMarker" Width="8" Height="8" Fill="#FFFF00FF" Margin="4"
+                   HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False"
+                   Visibility="Collapsed" Canvas.ZIndex="1000" AutomationProperties.AccessibilityView="Raw" />
     </Grid>
 </Page>

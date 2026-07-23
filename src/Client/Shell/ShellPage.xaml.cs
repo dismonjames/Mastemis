@@ -41,6 +41,7 @@ public sealed partial class ShellPage : Page
     public void EnableVisualReview(VisualFixture value, VisualReviewOptions options)
     {
         fixture = value;
+        ReviewCaptureMarker.Visibility = Visibility.Visible;
         var panel = new VisualFixturePanel { DataContext = value };
         panel.SetReviewContext(options);
         OnboardingReviewFixture.Content = panel;

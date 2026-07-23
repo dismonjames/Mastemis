@@ -8,6 +8,8 @@ internal sealed class X11WindowController : IDisposable
     private static readonly XErrorHandler ErrorHandler = (_, _) => 0;
     private readonly nint display;
     private readonly nint root;
+    public int DisplayWidth { get; }
+    public int DisplayHeight { get; }
 
     public X11WindowController()
     {
@@ -15,6 +17,9 @@ internal sealed class X11WindowController : IDisposable
         if (display == 0) throw new InvalidOperationException("X11 display is unavailable.");
         XSetErrorHandler(ErrorHandler);
         root = XDefaultRootWindow(display);
+        var screen = XDefaultScreen(display);
+        DisplayWidth = XDisplayWidth(display, screen);
+        DisplayHeight = XDisplayHeight(display, screen);
     }
 
     public IReadOnlySet<nint> MastemisWindowIds() => Enumerate(root)
@@ -38,6 +43,10 @@ internal sealed class X11WindowController : IDisposable
     public bool Activate(WindowInfo window)
     {
         XMapRaised(display, window.Id);
+        var state = XInternAtom(display, "_NET_WM_STATE", false);
+        var above = XInternAtom(display, "_NET_WM_STATE_ABOVE", false);
+        var stateMessage = new XEvent { ClientMessage = new XClientMessageEvent { type = 33, display = display, window = window.Id, message_type = state, format = 32, data0 = 1, data1 = above } };
+        XSendEvent(display, root, false, 1L << 19 | 1L << 20, ref stateMessage);
         var active = XInternAtom(display, "_NET_ACTIVE_WINDOW", false);
         var message = new XEvent { ClientMessage = new XClientMessageEvent { type = 33, display = display, window = window.Id, message_type = active, format = 32, data0 = 2 } };
         XSendEvent(display, root, false, 1L << 19 | 1L << 20, ref message);
@@ -56,12 +65,36 @@ internal sealed class X11WindowController : IDisposable
     public bool SendKeyboardSmoke(WindowInfo window)
     {
         if (!Activate(window)) return false;
-        foreach (var key in new[] { "Tab", "Tab", "Return", "Escape", "Left", "Right" })
+        foreach (var key in new[] { "Tab", "Tab", "Return", "space", "Down", "Up", "Left", "Right", "Escape" })
         {
-            var code = XKeysymToKeycode(display, XStringToKeysym(key));
-            if (code == 0) return false;
-            XTestFakeKeyEvent(display, code, true, 0); XTestFakeKeyEvent(display, code, false, 0); XFlush(display); Thread.Sleep(80);
+            if (!SendKey(key)) return false;
         }
+        if (!SendChord("Shift_L", "Tab")) return false;
+        return true;
+    }
+
+    private bool SendKey(string key)
+    {
+        var code = XKeysymToKeycode(display, XStringToKeysym(key));
+        if (code == 0) return false;
+        XTestFakeKeyEvent(display, code, true, 0);
+        XTestFakeKeyEvent(display, code, false, 0);
+        XFlush(display);
+        Thread.Sleep(80);
+        return true;
+    }
+
+    private bool SendChord(string modifier, string key)
+    {
+        var modifierCode = XKeysymToKeycode(display, XStringToKeysym(modifier));
+        var keyCode = XKeysymToKeycode(display, XStringToKeysym(key));
+        if (modifierCode == 0 || keyCode == 0) return false;
+        XTestFakeKeyEvent(display, modifierCode, true, 0);
+        XTestFakeKeyEvent(display, keyCode, true, 0);
+        XTestFakeKeyEvent(display, keyCode, false, 0);
+        XTestFakeKeyEvent(display, modifierCode, false, 0);
+        XFlush(display);
+        Thread.Sleep(80);
         return true;
     }
 
@@ -127,6 +160,9 @@ internal sealed class X11WindowController : IDisposable
     [DllImport("libX11.so.6")] private static extern nint XSetErrorHandler(XErrorHandler handler);
     [DllImport("libX11.so.6")] private static extern int XCloseDisplay(nint display);
     [DllImport("libX11.so.6")] private static extern nint XDefaultRootWindow(nint display);
+    [DllImport("libX11.so.6")] private static extern int XDefaultScreen(nint display);
+    [DllImport("libX11.so.6")] private static extern int XDisplayWidth(nint display, int screen);
+    [DllImport("libX11.so.6")] private static extern int XDisplayHeight(nint display, int screen);
     [DllImport("libX11.so.6")] private static extern int XQueryTree(nint display, nint window, out nint root, out nint parent, out nint children, out uint count);
     [DllImport("libX11.so.6")] private static extern int XGetClassHint(nint display, nint window, out XClassHint hint);
     [DllImport("libX11.so.6")] private static extern int XFetchName(nint display, nint window, out nint name);
