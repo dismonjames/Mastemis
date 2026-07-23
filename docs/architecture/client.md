@@ -32,3 +32,9 @@ The SignalR client connects to `/hubs/exam`, requests only server-authorized gro
 Connection, login, role navigation, dashboard identity, examination create/inspect/transition, candidate draft/submission, Problem Studio draft/MAS/generation operations, health, and settings are connected to production endpoints. Rooms, candidate administration, submission history, invigilation, evidence, problem library, and worker monitoring currently expose role-aware navigation and honest integration-boundary states because the current backend lacks complete list/query contracts for those views.
 
 The initial editor uses a bounded multiline monospace surface. It does not claim syntax highlighting or browser SFE collection.
+
+Problem Studio uses focused clients for versioned test-set metadata, bounded on-demand previews, package validation and CreateNew/ReplaceDraft imports, export retention, expiring author grants, examination assignments, and a paged activity timeline. Package progress reports bytes actually read from the selected stream; desktop drag-and-drop accepts one bounded `.mas` file and retains the keyboard-accessible picker.
+
+Room management uses scoped invigilator assignment APIs. Candidate account enable/disable remains administrator-authorized. Invigilation filtering and candidate detail operate over authorized bounded snapshots and realtime envelopes without source code, hidden tests, or evidence payloads.
+
+Reference source revisions can be edited and persisted, but dedicated compilation-only validation remains unavailable. Reference execution continues only through the durable Judge and Sandbox generation path; neither the client nor API server compiles source directly.
