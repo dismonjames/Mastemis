@@ -11,6 +11,7 @@ public interface ICandidateClient
 {
     Task<CandidateRegistration> RegisterAsync(Guid examId, Guid userId, string code, CancellationToken cancellationToken);
     Task<PagedResponse<CandidateListItem>?> ListAsync(Guid examId, string? search, CancellationToken cancellationToken);
+    Task SetEnabledAsync(Guid userId, bool enabled, CancellationToken cancellationToken);
 }
 
 public sealed class CandidateClient(IApiTransport transport) : ICandidateClient
@@ -22,4 +23,6 @@ public sealed class CandidateClient(IApiTransport transport) : ICandidateClient
 
     public Task<PagedResponse<CandidateListItem>?> ListAsync(Guid examId, string? search, CancellationToken cancellationToken)
         => transport.GetAsync<PagedResponse<CandidateListItem>>($"/api/queries/exams/{examId:D}/candidates?search={Uri.EscapeDataString(search ?? "")}&offset=0&limit=100", cancellationToken);
+    public Task SetEnabledAsync(Guid userId, bool enabled, CancellationToken ct) => transport.SendAsync(HttpMethod.Post,
+        $"/api/admin/users/{userId:D}/{(enabled ? "enable" : "disable")}", new { }, Guid.NewGuid().ToString("N"), ct);
 }

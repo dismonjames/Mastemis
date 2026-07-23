@@ -12,16 +12,22 @@ public sealed class CandidateOperationsViewModel : ObservableObject
     private string examId = string.Empty;
     private string userId = string.Empty;
     private string registrationCode = string.Empty;
+    private CandidateListItem? selectedCandidate;
+    private string operationResult = string.Empty;
     private bool isBusy;
     private string? error;
-    public CandidateOperationsViewModel(ICandidateClient client) { this.client = client; RegisterCommand = new AsyncCommand(RegisterAsync); RefreshCommand = new AsyncCommand(RefreshAsync); }
+    public CandidateOperationsViewModel(ICandidateClient client) { this.client = client; RegisterCommand = new AsyncCommand(RegisterAsync); RefreshCommand = new AsyncCommand(RefreshAsync); EnableCommand = new AsyncCommand(ct => SetEnabledAsync(true, ct)); DisableCommand = new AsyncCommand(ct => SetEnabledAsync(false, ct)); }
     public ICommand RegisterCommand { get; }
     public ICommand RefreshCommand { get; }
+    public ICommand EnableCommand { get; }
+    public ICommand DisableCommand { get; }
     public ObservableCollection<CandidateRegistration> Registrations { get; } = [];
     public ObservableCollection<CandidateListItem> Candidates { get; } = [];
     public string ExamId { get => examId; set => SetProperty(ref examId, value); }
     public string UserId { get => userId; set => SetProperty(ref userId, value); }
     public string RegistrationCode { get => registrationCode; set => SetProperty(ref registrationCode, value); }
+    public CandidateListItem? SelectedCandidate { get => selectedCandidate; set => SetProperty(ref selectedCandidate, value); }
+    public string OperationResult { get => operationResult; private set => SetProperty(ref operationResult, value); }
     public bool IsBusy { get => isBusy; private set => SetProperty(ref isBusy, value); }
     public string? Error { get => error; private set { if (SetProperty(ref error, value)) OnPropertyChanged(nameof(HasError)); } }
     public bool HasError => Error is not null;
@@ -42,5 +48,13 @@ public sealed class CandidateOperationsViewModel : ObservableObject
         try { Registrations.Insert(0, await client.RegisterAsync(exam, user, RegistrationCode.Trim(), cancellationToken).ConfigureAwait(true)); OnPropertyChanged(nameof(HasRegistrations)); RegistrationCode = string.Empty; }
         catch (ApiException value) { Error = value.Problem.Title; }
         finally { IsBusy = false; }
+    }
+    private async Task SetEnabledAsync(bool enabled, CancellationToken ct)
+    {
+        Error = null; OperationResult = string.Empty;
+        if (SelectedCandidate is null) { Error = "Select a candidate."; return; }
+        if (!enabled && SelectedCandidate.SessionState is "Active") { Error = "The candidate has an active session. Confirm termination policy before disabling the account."; return; }
+        try { await client.SetEnabledAsync(SelectedCandidate.UserId, enabled, ct); OperationResult = enabled ? "Candidate account enabled." : "Candidate account disabled."; await RefreshAsync(ct); }
+        catch (ApiException value) { Error = value.Problem.Title; }
     }
 }
