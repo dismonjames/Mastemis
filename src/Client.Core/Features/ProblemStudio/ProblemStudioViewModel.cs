@@ -20,7 +20,7 @@ public sealed class ProblemStudioViewModel : ObservableObject
     private readonly IProblemDraftClient draftsClient; private readonly IProblemMasClient masClient; private readonly IProblemGenerationClient generationClient;
     private ProblemDraftSummary? selectedDraft; private string source = string.Empty; private string seed = "1"; private string status = "Ready"; private string? error;
     private Guid? operationId; private GenerationProgress? progress;
-    private int cursorLine = 1, cursorColumn = 1;
+    private int cursorLine = 1, cursorColumn = 1, selectedSectionIndex;
     public ProblemStudioViewModel(IProblemDraftClient draftsClient, IProblemMasClient masClient, IProblemGenerationClient generationClient,
         ProblemMetadataViewModel metadata, StatementAuthoringViewModel statements, ProblemAssetViewModel assets,
         ReferenceSolutionViewModel referenceSolution, ProblemTestViewModel tests, ProblemPackageViewModel packages,
@@ -60,6 +60,7 @@ public sealed class ProblemStudioViewModel : ObservableObject
     public string ProgressText => Progress is null ? "No generation operation selected" : $"{Progress.Status} · {Progress.Numerator}/{Progress.Denominator}";
     public string ReferenceStatus => Progress?.ReferenceJobStatus ?? "Not queued";
     public string CursorPosition => $"Ln {cursorLine}, Col {cursorColumn}";
+    public int SelectedSectionIndex { get => selectedSectionIndex; set => SetProperty(ref selectedSectionIndex, value); }
     public void SetCursor(int line, int column) { cursorLine = Math.Max(1, line); cursorColumn = Math.Max(1, column); OnPropertyChanged(nameof(CursorPosition)); }
     private async Task RefreshAsync(CancellationToken ct) => await RunAsync(async () => { var values = await draftsClient.ListAsync(ct); Drafts.Clear(); foreach (var value in values) Drafts.Add(value); Status = $"{values.Count} authorized drafts"; }).ConfigureAwait(true);
     private async Task LoadAsync(CancellationToken ct) => await RunAsync(async () => { if (SelectedDraft is null) return; var detailed = await draftsClient.GetAsync(SelectedDraft.Id, ct) ?? SelectedDraft; SelectedDraft = detailed; Metadata.Load(detailed); Statements.SetProblem(detailed.Id); Assets.SetProblem(detailed.Id); ReferenceSolution.SetProblem(detailed.Id); Tests.SetProblem(detailed.Id); Packages.SetProblem(detailed.Id, detailed.Version); Permissions.SetProblem(detailed.Id); Activity.SetProblem(detailed.Id); Overview.SetProblem(detailed.Id); var value = await masClient.GetAsync(detailed.Id, ct); Source = value?.Source ?? string.Empty; Status = value is null ? "No MAS source" : $"MAS revision {value.Revision}"; }).ConfigureAwait(true);
