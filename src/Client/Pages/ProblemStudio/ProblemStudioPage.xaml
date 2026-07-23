@@ -1,7 +1,7 @@
 <Page x:Class="Mastemis.Client.Pages.ProblemStudio.ProblemStudioPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:controls="using:Mastemis.Client.Controls">
+      xmlns:controls="using:Mastemis.Client.Controls" xmlns:sections="using:Mastemis.Client.Pages.ProblemStudio.Sections">
     <Grid Padding="{StaticResource MastemisPageMargin}" RowSpacing="14">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <controls:PageHeader Eyebrow="PROBLEM AUTHORING" Title="Problem Studio" Subtitle="Edit MAS, validate deterministic generation, and monitor publication without leaving the document context.">
@@ -13,7 +13,7 @@
         </Grid>
         <Grid Grid.Row="2" ColumnSpacing="14"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <ListView SelectionMode="Single" SelectedIndex="0" Background="{ThemeResource MastemisNavigationBrush}" CornerRadius="8" Padding="5">
-                <ListViewItem Content="Overview"/><ListViewItem Content="Statements"/><ListViewItem Content="Assets" IsEnabled="False"/><ListViewItem Content="Judge settings"/><ListViewItem Content="MAS"/><ListViewItem Content="Reference solution" IsEnabled="False"/><ListViewItem Content="Generation"/><ListViewItem Content="Tests" IsEnabled="False"/><ListViewItem Content="Packages" IsEnabled="False"/><ListViewItem Content="Permissions" IsEnabled="False"/>
+                <ListViewItem Content="Overview"/><ListViewItem Content="Statements"/><ListViewItem Content="Assets"/><ListViewItem Content="Judge settings"/><ListViewItem Content="MAS"/><ListViewItem Content="Reference solution"/><ListViewItem Content="Generation"/><ListViewItem Content="Tests"/><ListViewItem Content="Packages"/><ListViewItem Content="Permissions"/>
             </ListView>
             <TabView Grid.Column="1" IsAddTabButtonVisible="False">
                 <TabViewItem Header="Overview">
@@ -38,6 +38,11 @@
                 <TabViewItem Header="Generation">
                     <StackPanel Padding="18" Spacing="14"><TextBlock Text="Operation progress" Style="{StaticResource MastemisSectionTitleStyle}"/><TextBlock Text="{Binding ProgressText}" FontSize="20" FontWeight="SemiBold"/><ProgressBar Value="{Binding Progress.Numerator}" Maximum="{Binding Progress.Denominator}"/><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="Reference worker" Style="{StaticResource MastemisMutedTextStyle}"/><TextBlock Grid.Column="1" Text="{Binding ReferenceStatus}"/></Grid><StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Refresh operation" Command="{Binding RefreshGenerationCommand}"/><Button Content="Cancel" Command="{Binding CancelGenerationCommand}"/></StackPanel></StackPanel>
                 </TabViewItem>
+                <TabViewItem Header="Assets"><sections:AssetsSection/></TabViewItem>
+                <TabViewItem Header="Reference solution"><sections:ReferenceSolutionSection/></TabViewItem>
+                <TabViewItem Header="Tests"><sections:TestsSection/></TabViewItem>
+                <TabViewItem Header="Packages"><sections:PackagesSection/></TabViewItem>
+                <TabViewItem Header="Permissions"><sections:PermissionsSection/></TabViewItem>
             </TabView>
         </Grid>
         <InfoBar Grid.Row="3" IsOpen="{Binding HasError}" Severity="Error" Title="Problem Studio request failed" Message="{Binding Error}" IsClosable="False"/>
