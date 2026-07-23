@@ -1,4 +1,5 @@
 using Mastemis.Client.Core.Authentication;
+using Mastemis.Client.Core.Diagnostics;
 using Mastemis.Client.Core.Features.About;
 using Mastemis.Client.Core.Features.CandidateExam;
 using Mastemis.Client.Core.Features.Candidates;
@@ -17,7 +18,6 @@ using Mastemis.Client.Core.Features.Rooms;
 using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Features.Shell;
 using Mastemis.Client.Core.Features.Workers;
-using Mastemis.Client.Core.Diagnostics;
 using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Networking.Realtime;

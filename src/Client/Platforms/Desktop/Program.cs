@@ -1,5 +1,5 @@
-using Uno.UI.Hosting;
 using Mastemis.Client.Core.Diagnostics;
+using Uno.UI.Hosting;
 
 namespace Mastemis.Client;
 
