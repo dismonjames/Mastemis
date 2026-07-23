@@ -1,8 +1,8 @@
 <UserControl x:Class="Mastemis.Client.Controls.EmptyState"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Padding="28" Spacing="9" HorizontalAlignment="Center" MaxWidth="460" AutomationProperties.LiveSetting="Polite">
-        <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="28" Foreground="{ThemeResource MastemisMutedTextBrush}" HorizontalAlignment="Center"/>
+    <StackPanel Padding="28" Spacing="9" HorizontalAlignment="Center" MaxWidth="460" AutomationProperties.LiveSetting="Polite" AutomationProperties.Name="{x:Bind Title, Mode=OneWay}">
+        <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="28" Foreground="{ThemeResource MastemisMutedTextBrush}" HorizontalAlignment="Center" AutomationProperties.AccessibilityView="Raw"/>
         <TextBlock Text="{x:Bind Title, Mode=OneWay}" FontSize="17" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
         <TextBlock Text="{x:Bind Message, Mode=OneWay}" Style="{StaticResource MastemisMutedTextStyle}" TextAlignment="Center"/>
     </StackPanel>

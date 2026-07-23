@@ -5,7 +5,7 @@
         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Spacing="4">
             <TextBlock Text="{x:Bind Eyebrow, Mode=OneWay}" Style="{StaticResource MastemisEyebrowTextStyle}" Visibility="{x:Bind EyebrowVisibility, Mode=OneWay}"/>
-            <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource MastemisPageTitleStyle}"/>
+            <TextBlock Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource MastemisPageTitleStyle}" AutomationProperties.HeadingLevel="Level1"/>
             <TextBlock Text="{x:Bind Subtitle, Mode=OneWay}" Style="{StaticResource MastemisMutedTextStyle}" Visibility="{x:Bind SubtitleVisibility, Mode=OneWay}"/>
         </StackPanel>
         <ContentPresenter Grid.Column="1" Content="{x:Bind Commands, Mode=OneWay}" VerticalAlignment="Bottom" Margin="20,0,0,0"/>
