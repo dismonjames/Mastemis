@@ -15,6 +15,7 @@ using Mastemis.Client.Core.Features.Rooms;
 using Mastemis.Client.Core.Features.Settings;
 using Mastemis.Client.Core.Features.Shell;
 using Mastemis.Client.Core.Features.Workers;
+using Mastemis.Client.Core.Diagnostics;
 using Mastemis.Client.Core.Navigation;
 using Mastemis.Client.Core.Networking.Http;
 using Mastemis.Client.Core.Networking.Realtime;
@@ -49,7 +50,16 @@ public sealed partial class App : Application
     private readonly string[] arguments;
 
     public App() : this([]) { }
-    public App(string[] arguments) { this.arguments = arguments; InitializeComponent(); }
+    public App(string[] arguments)
+    {
+        this.arguments = arguments;
+        UnhandledException += (_, eventArgs) =>
+        {
+            StartupDiagnosticWriter.CreateDefault().WriteFatal(eventArgs.Exception);
+            Environment.ExitCode = 1;
+        };
+        InitializeComponent();
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
@@ -133,8 +143,21 @@ public sealed partial class App : Application
         services.AddHttpClient("Mastemis.Probe", client => client.Timeout = TimeSpan.FromSeconds(10));
 
         var provider = services.BuildServiceProvider();
-        window = new Window { Content = provider.GetRequiredService<ShellPage>() };
+        var review = VisualReviewOptions.Parse(arguments,
+            string.Equals(Environment.GetEnvironmentVariable("MASTEMIS_ENABLE_VISUAL_REVIEW"), "1", StringComparison.Ordinal));
+        if (review is not null)
+        {
+            var session = provider.GetRequiredService<ClientSession>();
+            session.SelectServer(new Uri("https://visual-review.invalid"), ClientMode.Connect);
+            session.Authenticate(new(Guid.Empty, "visual-review", "Visual Review", [review.Role]));
+            provider.GetRequiredService<IClientNavigator>().Navigate(review.Route);
+        }
+        var shell = provider.GetRequiredService<ShellPage>();
+        if (review is not null) shell.RequestedTheme = string.Equals(review.Theme, "light", StringComparison.OrdinalIgnoreCase)
+            ? ElementTheme.Light : ElementTheme.Dark;
+        window = new Window { Content = shell };
         window.Title = "Mastemis";
         window.Activate();
+        if (review is not null) window.AppWindow.Resize(new Windows.Graphics.SizeInt32 { Width = review.Width, Height = review.Height });
     }
 }
