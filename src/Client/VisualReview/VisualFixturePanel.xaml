@@ -6,11 +6,11 @@
         <VisualStateGroup x:Name="ReviewWidthStates">
             <VisualState x:Name="CompactReview">
                 <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0" /></VisualState.StateTriggers>
-                <VisualState.Setters><Setter Target="FixtureSections.Visibility" Value="Collapsed" /></VisualState.Setters>
+                <VisualState.Setters><Setter Target="FixtureSections.Visibility" Value="Collapsed" /><Setter Target="CompactFixtureSummary.Visibility" Value="Visible" /></VisualState.Setters>
             </VisualState>
             <VisualState x:Name="WideReview">
                 <VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="1150" /></VisualState.StateTriggers>
-                <VisualState.Setters><Setter Target="FixtureSections.Visibility" Value="Visible" /></VisualState.Setters>
+                <VisualState.Setters><Setter Target="FixtureSections.Visibility" Value="Visible" /><Setter Target="CompactFixtureSummary.Visibility" Value="Collapsed" /></VisualState.Setters>
             </VisualState>
         </VisualStateGroup>
     </VisualStateManager.VisualStateGroups>
@@ -47,6 +47,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <TextBlock x:Name="CompactFixtureSummary" Grid.Column="1" Text="{Binding CompactSummary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Visibility="Collapsed" />
             <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                 <TextBlock x:Name="ContextText" FontWeight="SemiBold" />
                 <TextBlock Text="Fixture data · no network" Style="{StaticResource MastemisCaptionTextStyle}" />

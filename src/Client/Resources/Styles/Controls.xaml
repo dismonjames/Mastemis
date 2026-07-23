@@ -26,7 +26,7 @@
         <Setter Property="MinHeight" Value="42"/><Setter Property="Padding" Value="16,8"/><Setter Property="CornerRadius" Value="6"/>
     </Style>
     <Style x:Key="MastemisEditorTextBoxStyle" TargetType="TextBox">
-        <Setter Property="Background" Value="{ThemeResource MastemisEditorBrush}"/><Setter Property="BorderBrush" Value="{ThemeResource MastemisBorderBrush}"/><Setter Property="CornerRadius" Value="6"/><Setter Property="FontFamily" Value="Cascadia Mono,Consolas,monospace"/><Setter Property="FontSize" Value="14"/><Setter Property="Padding" Value="14"/>
+        <Setter Property="Background" Value="{ThemeResource MastemisEditorBrush}"/><Setter Property="BorderBrush" Value="{ThemeResource MastemisBorderBrush}"/><Setter Property="CornerRadius" Value="6"/><Setter Property="FontFamily" Value="Cascadia Mono,Consolas,monospace"/><Setter Property="FontSize" Value="{ThemeResource MastemisEditorFontSize}"/><Setter Property="Padding" Value="14"/>
     </Style>
     <Style x:Key="MastemisModeToggleStyle" TargetType="ToggleButton">
         <Setter Property="Background" Value="{ThemeResource MastemisSurfaceBrush}"/>

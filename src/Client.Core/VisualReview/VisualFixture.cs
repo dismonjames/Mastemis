@@ -11,6 +11,7 @@ public sealed record VisualFixture(
     public const int MaximumValueLength = 512;
 
     public IEnumerable<VisualFixtureValue> Values => Sections.SelectMany(section => section.Values);
+    public string CompactSummary => string.Join(" · ", Values.Take(3).Select(value => $"{value.Label}: {value.Value}"));
 }
 
 public sealed record VisualFixtureSection(string Heading, IReadOnlyList<VisualFixtureValue> Values);
